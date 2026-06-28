@@ -24,8 +24,11 @@ namespace OtusHomeWork2026
         public const string CmRemoveTask = "/removetask";
         public const string CmRemoveTaskDescription = "- удалить задачи по номеру в списке";
         public const string CmShowTasks = "/showtasks";
-        public const string CmShowTasksDescription = "- отобразить список всех добавленных задач.";
-
+        public const string CmShowTasksDescription = "- отобразить список aктивных добавленных задач.";
+        public const string CmShowAllTasks = "/showalltasks";
+        public const string CmShowAllTasksDescription = "- отобразить список всех добавленных задач.";
+        public const string CmCompleteTask = "/completetask";
+        public const string CmCompleteTaskDescription = "- (guid задачи) пометить Задачу с guid выполненой.";
 
         internal static void PrintHelp(bool checkUser)
         {
@@ -76,6 +79,25 @@ namespace OtusHomeWork2026
         {
             if (string.IsNullOrWhiteSpace(str))
                 throw new CustomException("Строка пустая или состоит из пробелов");
+        }
+        static internal string GetUserCommands(string userInput)
+        {
+            string[] arr = userInput.Split(' ');
+            return  arr[0].Trim();
+        }
+        static internal string GetUserArguments(string userInput)
+        {
+            string _arguments = string.Empty;
+            string[] arr = userInput.Split(' ');
+            if (arr.Length > 0)
+            {
+                if (arr.Length > 1)
+                {
+                    for (int i = 1; i < arr.Length; i++)
+                        _arguments = string.Join(" ", _arguments, arr[i].Trim()).Trim();
+                }
+            }
+            return _arguments;
         }
     }
 }

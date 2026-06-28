@@ -8,20 +8,20 @@ namespace OtusHomeWork2026
 {
     public class ToDoList
     {
-        List<string> _toDoList = new List<string>();
-
-        
+        List<ToDoItem> _toDoList = new List<ToDoItem>();
+       
         public int Length
         {
             get{ return _toDoList.Count;}
         }
 
-        public void AddTask(string taskName)
+        public void AddTask(ToDoUser user,string taskName)
         {
-            if(_toDoList.Contains(taskName))
+            
+            if (_toDoList.Count(x => x.TaskName == taskName) > 0)
                 throw new CustomException($"Такая задача уже есть.");
             else
-                _toDoList.Add(taskName);
+                _toDoList.Add(new ToDoItem(user, taskName));
         }
         public void RemoveTask(int idTask)
         {
@@ -34,9 +34,27 @@ namespace OtusHomeWork2026
         {
             for (int i = 0; i < _toDoList.Count; i++)
             {
-                Console.WriteLine($"{i+1}. {_toDoList[i]}");
+                if (_toDoList[i].State == ToDoItemState.Active)
+                    Console.WriteLine($"{_toDoList[i].TaskName} - {_toDoList[i].CreateAT} {_toDoList[i].GuidId}");
             }
         }
 
+        public void ShowAllTasks()
+        {
+            for (int i = 0; i < _toDoList.Count; i++)
+            {
+                Console.WriteLine($"({_toDoList[i].State}) {_toDoList[i].TaskName} - {_toDoList[i].CreateAT} {_toDoList[i].GuidId}");
+            }
+        }
+
+        public void CompleteTask(Guid idTask)
+        {
+            foreach (ToDoItem itemTask in _toDoList)
+                if (itemTask.GuidId == idTask)
+                {
+                    itemTask.State = ToDoItemState.Completed;
+                    itemTask.ChangedAt = DateTime.Now;
+                }
+        }
     }
 }
