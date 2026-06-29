@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace OtusHomeWork2026
+namespace OtusHomeWork2026.Core.Exceptions
 {
     internal class CustomException : Exception
     {
