@@ -1,5 +1,6 @@
 ﻿using OtusHomeWork2026.Core.DataAccess;
 using OtusHomeWork2026.Core.Entities;
+using OtusHomeWork2026.Infrastructure.DataAccess;
 using OtusHomeWork2026.TelegramBot;
 using System;
 using System.Collections.Generic;
@@ -11,6 +12,11 @@ namespace OtusHomeWork2026.Core.Services
 {
     internal class UserService : IUserService
     {
+        IUserRepository userRepository;
+        public UserService()
+        {
+            userRepository = new InMemoryUserRepository();
+        }
         public ToDoUser? GetUser(long telegramUserId)
         {
             var user = new ToDoUser();

@@ -7,15 +7,18 @@ using System.Threading.Tasks;
 
 namespace OtusHomeWork2026.Core.DataAccess
 {
-    public interface IToDoService
+    interface IToDoRepository
     {
         IReadOnlyList<ToDoItem> GetAllByUserId(Guid userId);
         //Возвращает ToDoItem для UserId со статусом Active
         IReadOnlyList<ToDoItem> GetActiveByUserId(Guid userId);
-        ToDoItem Add(ToDoUser user, string name);
-        void MarkCompleted(Guid id);
+        ToDoItem? Get(Guid id);
+        void Add(ToDoItem item);
+        void Update(ToDoItem item);
         void Delete(Guid id);
-
-        IReadOnlyList<ToDoItem> Find(ToDoUser user, string namePrefix);
+        //Проверяет есть ли задача с таким именем у пользователя
+        bool ExistsByName(Guid userId, string name);
+        //Возвращает количество активных задач у пользователя
+        int CountActive(Guid userId);
     }
 }
