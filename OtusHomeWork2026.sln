@@ -4,8 +4,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 VisualStudioVersion = 17.14.36401.2
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OtusHomeWork2026", "OtusHomeWork2026\OtusHomeWork2026.csproj", "{FD430FF5-66C6-4B7C-96DE-C025245CADAE}"
+	ProjectSection(ProjectDependencies) = postProject
+		{F2538C2D-82C5-D10A-3004-6079053F86E7} = {F2538C2D-82C5-D10A-3004-6079053F86E7}
+	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Otus.ToDoList.ConsoleBot", "..\..\..\Documents\GitHub\C-Sharp-Basic\Homeworks\05.2 ООП интерфейсы\Otus.ToDoList.ConsoleBot\Otus.ToDoList.ConsoleBot.csproj", "{F2432296-956C-CBF6-BC09-CC9BFB47E618}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Otus.ToDoList.ConsoleBot", "..\..\..\Desktop\C-Sharp-Basic-main\Homeworks\07 Асинхронность, делегаты и события\Otus.ToDoList.ConsoleBot\Otus.ToDoList.ConsoleBot.csproj", "{F2538C2D-82C5-D10A-3004-6079053F86E7}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -17,10 +20,10 @@ Global
 		{FD430FF5-66C6-4B7C-96DE-C025245CADAE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FD430FF5-66C6-4B7C-96DE-C025245CADAE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FD430FF5-66C6-4B7C-96DE-C025245CADAE}.Release|Any CPU.Build.0 = Release|Any CPU
-		{F2432296-956C-CBF6-BC09-CC9BFB47E618}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{F2432296-956C-CBF6-BC09-CC9BFB47E618}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{F2432296-956C-CBF6-BC09-CC9BFB47E618}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{F2432296-956C-CBF6-BC09-CC9BFB47E618}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F2538C2D-82C5-D10A-3004-6079053F86E7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F2538C2D-82C5-D10A-3004-6079053F86E7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F2538C2D-82C5-D10A-3004-6079053F86E7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F2538C2D-82C5-D10A-3004-6079053F86E7}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

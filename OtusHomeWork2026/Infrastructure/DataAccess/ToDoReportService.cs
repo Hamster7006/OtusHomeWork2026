@@ -17,14 +17,15 @@ namespace OtusHomeWork2026.Infrastructure.DataAccess
         {
             _toDoRepository = toDoRepository;
         }
-        public (int total, int completed, int active, DateTime generatedAt) GetUserStats(Guid userId)
+        public async Task<(int total, int completed, int active, DateTime generatedAt)> GetUserStatsAsync(Guid userId, CancellationToken ct)
         {
-            var userTasks = _toDoRepository.GetAllByUserId(userId);
+            var userTasks = await _toDoRepository.GetAllByUserIdAsync(userId, ct);
             var totalTasks = userTasks.Count;
-            var activeUserTasks = _toDoRepository.GetActiveByUserId(userId);
+            var activeUserTasks = await _toDoRepository.GetActiveByUserIdAsync(userId, ct);
             var activeTasks = activeUserTasks.Count;
 
             return (totalTasks, totalTasks - activeTasks, activeTasks, DateTime.Now);
         }
+      
     }
 }

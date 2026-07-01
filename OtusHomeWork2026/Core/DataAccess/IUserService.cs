@@ -9,7 +9,7 @@ namespace OtusHomeWork2026.Core.DataAccess
 {
     interface IUserService
     {
-        ToDoUser RegisterUser(long telegramUserId, string telegramUserName);
-        ToDoUser? GetUser(long telegramUserId);
+        Task<ToDoUser> RegisterUserAsync(long telegramUserId, string telegramUserName, CancellationToken ct);
+        Task<ToDoUser?> GetUserAsync(long telegramUserId, CancellationToken ct);
     }
 }

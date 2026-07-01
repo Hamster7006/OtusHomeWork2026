@@ -19,41 +19,41 @@ namespace OtusHomeWork2026.Core.Services
             toDoRepository = new InMemoryToDoRepository();
         }
 
-        public ToDoItem Add(ToDoUser user, string name)
+        public async Task<ToDoItem> AddAsync(ToDoUser user, string name, CancellationToken ct)
         {
-            if (toDoRepository.ExistsByName(user.UserId,name))
+            if (await toDoRepository.ExistsByNameAsync(user.UserId,name, ct))
                 throw new CustomException($"Такая задача уже есть.");
             else
             {
                 var tempTodo = new ToDoItem(user, name);
-                toDoRepository.Add(tempTodo);
+                await toDoRepository.AddAsync(tempTodo, ct);
                 return tempTodo;
             }
         }
 
-        public void Delete(Guid id)
+        public async Task DeleteAsync(Guid id, CancellationToken ct)
         {
-            toDoRepository.Delete(id);
+            await toDoRepository.DeleteAsync(id, ct);
         }
 
-        public IReadOnlyList<ToDoItem> GetActiveByUserId(Guid userId)
+        public async Task<IReadOnlyList<ToDoItem>> GetActiveByUserIdAsync(Guid userId, CancellationToken ct)
         {
-            return toDoRepository.GetActiveByUserId(userId);
+            return await toDoRepository.GetActiveByUserIdAsync(userId, ct);
         }
 
-        public IReadOnlyList<ToDoItem> GetAllByUserId(Guid userId)
+        public async Task<IReadOnlyList<ToDoItem>> GetAllByUserIdAsync(Guid userId, CancellationToken ct)
         {
-            return toDoRepository.GetAllByUserId(userId);
+            return await toDoRepository.GetAllByUserIdAsync(userId, ct);
         }
 
-        public void MarkCompleted(Guid id)
+        public async Task MarkCompletedAsync(Guid id, CancellationToken ct)
         {
-            var tempTodo = toDoRepository.Get(id);
-            toDoRepository.Update(tempTodo);
+            var tempTodo = await toDoRepository.GetAsync(id, ct);
+            toDoRepository.UpdateAsync(tempTodo, ct);
         }
-        public IReadOnlyList<ToDoItem> Find(ToDoUser user, string namePrefix)
+        public async Task<IReadOnlyList<ToDoItem>> FindAsync(ToDoUser user, string namePrefix, CancellationToken ct)
         {
-            var userTasks = toDoRepository.GetAllByUserId(user.UserId);
+            var userTasks = await toDoRepository.GetAllByUserIdAsync(user.UserId, ct);
             return userTasks.Where(x => x.TaskName.StartsWith(namePrefix)).ToList();
         }
     }

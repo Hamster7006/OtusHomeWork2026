@@ -11,17 +11,17 @@ namespace OtusHomeWork2026.Infrastructure.DataAccess
     internal class InMemoryUserRepository : IUserRepository
     {
         List<ToDoUser> _toDoUsers = new List<ToDoUser>();
-        public void Add(ToDoUser user)
+        public async Task AddAsync(ToDoUser user, CancellationToken ct)
         {
             _toDoUsers.Add(user);
         }
 
-        public ToDoUser? GetUser(Guid userId)
+        public async Task<ToDoUser?> GetUserAsync(Guid userId, CancellationToken ct)
         {
             return _toDoUsers.Where(x => x.UserId == userId).FirstOrDefault();
         }
 
-        public ToDoUser? GetUserByTelegramUserId(long telegramUserId)
+        public async Task<ToDoUser?> GetUserByTelegramUserIdAsync(long telegramUserId, CancellationToken ct)
         {
             return _toDoUsers.Where(x => x.TelegramUserId == telegramUserId).FirstOrDefault();
         }
