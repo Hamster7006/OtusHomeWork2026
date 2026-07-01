@@ -99,21 +99,10 @@ namespace OtusHomeWork2026.TelegramBot
                 throw new CustomException("Строка пустая или состоит из пробелов");
         }
         
-        static internal string ReplaceText(string text, ToDoUser? user)
+        static internal string ReplaceText(string text, ToDoUser? userName = null)
         { 
-            if(user != null) 
-                if(user.TelegramUserName != null)
-                    text = $"{user.TelegramUserName}, {text}";
-            return text;
-        }
-        static internal string ReplaceText(string text)
-        {
-            return text;
-        }
-        static internal string ReplaceText(string text, string userName)
-        {
-            if (userName != null)
-                text = $"{userName}, {text}";
+            if(userName != null)
+                text = $"{userName.TelegramUserName}, {text}";
             return text;
         }
     }

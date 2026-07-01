@@ -5,6 +5,7 @@ using OtusHomeWork2026.Core.Entities;
 using OtusHomeWork2026.Core.Exceptions;
 using OtusHomeWork2026.Core.Services;
 using OtusHomeWork2026.Infrastructure.DataAccess;
+using System;
 using System.Threading;
 
 
@@ -35,18 +36,11 @@ namespace OtusHomeWork2026.TelegramBot
 
         public async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken ct)
         {
-            if (update.Message is not { } message)
-                return;
+            //await botClient.SendMessage(
+            //        update.Message.Chat,$"Добро пожаловать в прогрaмму!\r\nДоступные комманды:\r\n - {Const.PrintAvalibleComands(false)}", ct);
 
-            // Only process text messages
-            if (message.Text is not { } messageText)
-                return;
-
-            await botClient.SendMessage(
-                    update.Message.Chat,$"Добро пожаловать в прогрaмму!\r\nДоступные комманды:\r\n - {Const.PrintAvalibleComands(false)}", ct);
-
-            do
-            {
+            //do
+            //{
                 await botClient.SendMessage(update.Message.Chat, $"Получил '{update.Message.Text}'", ct);
                 _command = string.Empty;
                 _arguments = string.Empty;
@@ -79,11 +73,24 @@ namespace OtusHomeWork2026.TelegramBot
                             await botClient.SendMessage(update.Message.Chat, Const.ReplaceText($"Релиз {Const.DateRelise} \r\n Версия {Const.VersionBot}", userData), ct);
                             break;
                         case Const.CmHelp:
-                            await botClient.SendMessage(update.Message.Chat, Const.ReplaceText(Const.PrintHelp(!string.IsNullOrEmpty(userData.TelegramUserName)), userData), ct);
+                            await botClient.SendMessage(
+                                update.Message.Chat, 
+                                Const.ReplaceText(
+                                    Const.PrintHelp(
+                                        !string.IsNullOrEmpty(
+                                            userData.TelegramUserName
+                                        )
+                                    ), 
+                                    userData
+                                ), 
+                                ct
+                            );
                             break;
                         case Const.CmExit:
-                            _exit = true;
-                            break;
+                        //_exit = true;
+                            await botClient.SendMessage(update.Message.Chat, "Работа с ботом завершена.", ct);
+                            Environment.Exit(0);
+                            return;
                         case Const.CmAddTask:
                             if (!(await CheckAnonimusAsync(userData, botClient, update, ct)))
                                 break;
@@ -155,7 +162,18 @@ namespace OtusHomeWork2026.TelegramBot
                             break;
                         default:
                             await botClient.SendMessage(update.Message.Chat, Const.ReplaceText("Не корректная команда или не задан параметр, повторите ввод.", userData), ct);
-                            await botClient.SendMessage(update.Message.Chat, Const.ReplaceText(Const.PrintHelp(!string.IsNullOrEmpty(userData.TelegramUserName)), userData), ct);
+                            await botClient.SendMessage(
+                                update.Message.Chat,
+                                Const.ReplaceText(
+                                    Const.PrintHelp(
+                                        !string.IsNullOrEmpty(
+                                            userData.TelegramUserName
+                                        )
+                                    ),
+                                    userData
+                                ),
+                                ct
+                            );
                             break;
                     }
                 }
@@ -163,7 +181,7 @@ namespace OtusHomeWork2026.TelegramBot
                 {
                     await botClient.SendMessage(update.Message.Chat, Const.ReplaceText($"Ошибка: {ex.Message}", userData), ct);
                 }
-            } while (!_exit);
+        //} while (!_exit);
         }
         internal async Task<bool> CheckAnonimusAsync(ToDoUser user, ITelegramBotClient botClient, Update update, CancellationToken ct)
         {

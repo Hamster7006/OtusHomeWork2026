@@ -10,16 +10,13 @@ namespace OtusHomeWork2026
     {
         static void Main(string[] args)
         {
-            
-
-
             try
             {
                 using var cts = new CancellationTokenSource();
                 var handler = new UpdateHandler();
                 //var update = new Update();
                 var botClient = new ConsoleBotClient();
-                botClient.StartReceiving(handler, cts.Token); 
+                botClient.StartReceiving(handler, cts.Token);
                 //new UpdateHandler().HandleUpdateAsync(botClient, update, cts.Token);
             }
             catch (CustomException ex)
@@ -30,7 +27,7 @@ namespace OtusHomeWork2026
                 Console.WriteLine($"StackTrace: {ex.StackTrace}");
                 Console.WriteLine($"InnerException: {ex.InnerException}");
                 //botClient.SendMessage(
-                //    update.Message.Chat, 
+                //    update.Message.Chat,
                 //    $"Ошибка: \r\n Type: {ex.GetType()} \r\n Message: {ex.Message} \r\n StackTrace: {ex.StackTrace} \r\n InnerException: {ex.InnerException} \r\n",
                 //    cts.Token
                 //);
