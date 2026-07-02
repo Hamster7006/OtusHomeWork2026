@@ -361,3 +361,5 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+/OtusHomeWork2026/jsconfig1.json
+/Config.json
