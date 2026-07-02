@@ -19,12 +19,7 @@ namespace OtusHomeWork2026.Core.Services
         }
         public async Task<ToDoUser?> GetUserAsync(long telegramUserId, CancellationToken ct)
         {
-            //var user = new ToDoUser();
-            return await userRepository.GetUserByTelegramUserIdAsync(telegramUserId, ct);
-            //if (user.TelegramUserId == telegramUserId)
-            //    return user;
-            //else
-            //    return null;
+             return await userRepository.GetUserByTelegramUserIdAsync(telegramUserId, ct);
         }
 
         public async Task<ToDoUser> RegisterUserAsync(long telegramUserId, string telegramUserName, CancellationToken ct)

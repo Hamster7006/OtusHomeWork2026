@@ -102,7 +102,7 @@ namespace OtusHomeWork2026.TelegramBot
         static internal string ReplaceText(string text, ToDoUser? userName = null)
         { 
             if(userName != null)
-                text = $"{userName.TelegramUserName}, {text}";
+                text = $"{userName.TelegramUserName},\r\n{text}";
             return text;
         }
     }

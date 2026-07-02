@@ -16,16 +16,17 @@ namespace OtusHomeWork2026.Core.Services
         IToDoRepository toDoRepository;
         public ToDoService(IToDoRepository toDoRepository) {
             //_toDoList = new List<ToDoItem>();
-            toDoRepository = new InMemoryToDoRepository();
+            //toDoRepository = new InMemoryToDoRepository();
+            this.toDoRepository = toDoRepository;
         }
 
         public async Task<ToDoItem> AddAsync(ToDoUser user, string name, CancellationToken ct)
         {
-            if (await toDoRepository.ExistsByNameAsync(user.UserId,name, ct))
+            var tempTodo = new ToDoItem(user, name);
+            if (await toDoRepository.ExistsByNameAsync(user.UserId, name, ct))
                 throw new CustomException($"Такая задача уже есть.");
             else
             {
-                var tempTodo = new ToDoItem(user, name);
                 await toDoRepository.AddAsync(tempTodo, ct);
                 return tempTodo;
             }
@@ -38,12 +39,18 @@ namespace OtusHomeWork2026.Core.Services
 
         public async Task<IReadOnlyList<ToDoItem>> GetActiveByUserIdAsync(Guid userId, CancellationToken ct)
         {
-            return await toDoRepository.GetActiveByUserIdAsync(userId, ct);
+            if (null == toDoRepository)
+                return new List<ToDoItem>();
+            else
+                return await toDoRepository.GetActiveByUserIdAsync(userId, ct);
         }
 
         public async Task<IReadOnlyList<ToDoItem>> GetAllByUserIdAsync(Guid userId, CancellationToken ct)
         {
-            return await toDoRepository.GetAllByUserIdAsync(userId, ct);
+            if(null == toDoRepository)
+                return new List<ToDoItem>();
+            else
+                return await toDoRepository.GetAllByUserIdAsync(userId, ct);
         }
 
         public async Task MarkCompletedAsync(Guid id, CancellationToken ct)
