@@ -2,6 +2,7 @@
 using OtusHomeWork2026.TelegramBot;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -19,7 +20,14 @@ namespace OtusHomeWork2026
         {
             //string? token = Environment.GetEnvironmentVariable("TelegramBotTokenOTUSBasic", EnvironmentVariableTarget.User);
 
-            string token = GetTokenTgBot();
+            string token = string.Empty;
+            //token = GetTokenTgBot();
+
+            using (StreamReader reader = new StreamReader("C:\\Users\\Alkesandr\\Desktop\\tgtoken.txt"))
+            {
+                token = await reader.ReadToEndAsync();
+                Console.WriteLine(token);
+            }
 
             try
             {
@@ -33,20 +41,21 @@ namespace OtusHomeWork2026
                 // Создаем список команд
                 var commands = new List<BotCommand>
                 {
-                    new BotCommand { Command = "start", Description = "Начать работать с ботом." },
-                    new BotCommand { Command = "help", Description = "Вывести команды." },
-                    new BotCommand { Command = "info", Description = "Вывести информацию о Telegram боте." },
-                    new BotCommand { Command = "addtask", Description = "Добавить задчу." },
-                    new BotCommand { Command = "showtasks", Description = "Вывести задачи в работе." },
-                    new BotCommand { Command = "removetask", Description = "Удалить задачу." },
-                    new BotCommand { Command = "completetask", Description = "Установить статус задачи на Завершена." },
-                    new BotCommand { Command = "showalltasks", Description = "Вывести все задачи." },
-                    new BotCommand { Command = "report", Description = "Вывести отчет по задачам." },
-                    new BotCommand { Command = "find", Description = "Вывести задачи, которые начинаются на префикс." },
-                    new BotCommand { Command = "exit", Description = "Выход." },
+                    new BotCommand { Command = $"{Const.CmStart.Replace("/","")}", Description = $"{Const.CmStartDescription}" },
+                    new BotCommand { Command = $"{Const.CmHelp.Replace("/","")}", Description = $"{Const.CmHelpDescription}" },
+                    new BotCommand { Command = $"{Const.CmInfo.Replace("/","")}", Description = $"{Const.CmInfoDescription}" },
+                    new BotCommand { Command = $"{Const.CmAddTask.Replace("/","")}", Description = $"{Const.CmAddTaskDescription}" },
+                    new BotCommand { Command = $"{Const.CmRemoveTask.Replace("/", "")}", Description = $"{Const.CmRemoveTaskDescription}" },
+                    new BotCommand { Command = $"{Const.CmShowTasks.Replace("/", "")}", Description = $"{Const.CmShowTasksDescription}" },
+                    new BotCommand { Command = $"{Const.CmShowAllTasks.Replace("/", "")}", Description = $"{Const.CmShowAllTasksDescription}" },
+                    new BotCommand { Command = $"{Const.CmReport.Replace("/", "")}", Description = $"{Const.CmReportDescription}" },
+                    new BotCommand { Command = $"{Const.CmFind.Replace("/", "")}", Description = $"{Const.CmFindDescription}" },
+                    new BotCommand { Command = $"{Const.CmCompleteTask.Replace("/", "")}", Description = $"{Const.CmCompleteTaskDescription}" },
+                    new BotCommand { Command = $"{Const.CmExit.Replace("/", "")}", Description = Const.CmExitDescription },
                 };
 
                 // Устанавливаем команды
+                await botClient.SetMyCommands(commands);
                 await botClient.SetMyCommands(commands);
                 var handler = new UpdateHandler();
                 botClient.StartReceiving(handler, receiverOptions, cancellationTokenSource.Token);
