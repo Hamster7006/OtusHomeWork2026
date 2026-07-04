@@ -1,5 +1,4 @@
-﻿using Otus.ToDoList.ConsoleBot.Types;
-using OtusHomeWork2026.Core.Entities;
+﻿using OtusHomeWork2026.Core.Entities;
 using OtusHomeWork2026.Core.Exceptions;
 using System;
 using System.Collections.Generic;

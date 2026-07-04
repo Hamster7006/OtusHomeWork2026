@@ -1,12 +1,13 @@
-﻿using Otus.ToDoList.ConsoleBot;
-using Otus.ToDoList.ConsoleBot.Types;
+﻿
 using OtusHomeWork2026.Core.DataAccess;
 using OtusHomeWork2026.Core.Entities;
 using OtusHomeWork2026.Core.Exceptions;
 using OtusHomeWork2026.Core.Services;
 using OtusHomeWork2026.Infrastructure.DataAccess;
-using System;
-using System.Threading;
+using Telegram.Bot;
+using Telegram.Bot.Polling;
+using Telegram.Bot.Types;
+using Telegram.Bot.Types.ReplyMarkups;
 
 
 namespace OtusHomeWork2026.TelegramBot
@@ -17,7 +18,6 @@ namespace OtusHomeWork2026.TelegramBot
         private static int taskLengthLimittaskLength = 4;
         private static string _command = string.Empty;
         private static string _arguments = string.Empty;
-        //internal static IToDoService _toDoService = new ToDoService();
         private static bool _exit = false;
         bool _checkName;
         IToDoService _toDoService;
@@ -25,6 +25,7 @@ namespace OtusHomeWork2026.TelegramBot
         IToDoRepository _toDoRepository;
         IToDoReportService _toDoReportService;
         private ToDoUser? userData;
+        ReplyKeyboardMarkup _replyKeyboardMarkup;
 
         public UpdateHandler()
         {
@@ -32,116 +33,114 @@ namespace OtusHomeWork2026.TelegramBot
             _toDoRepository = new InMemoryToDoRepository();
             _toDoService = new ToDoService(_toDoRepository);
             _toDoReportService = new ToDoReportService(_toDoRepository);
+            _replyKeyboardMarkup = new ReplyKeyboardMarkup();
         }
 
-        public async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken ct)
+        public async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
         {
-            //await botClient.SendMessage(
-            //        update.Message.Chat,$"Добро пожаловать в прогрaмму!\r\nДоступные комманды:\r\n - {Const.PrintAvalibleComands(false)}", ct);
-
-            //do
-            //{
-            await botClient.SendMessage(update.Message.Chat, $"Получил '{update.Message.Text}'", ct);
+            //await botClient.SendMessage(update.Message.Chat, $"Получил '{update.Message.Text}'", cancellationToken: cancellationToken);
             _command = string.Empty;
             _arguments = string.Empty;
-            //var userInput = Console.ReadLine();
-            userData = await _userService.GetUserAsync(update.Message.From.Id, ct);
-            await GetUserCommandsAndAArgumentsAsync(update.Message.Text, ct);
+            userData = await _userService.GetUserAsync(update.Message.From.Id, cancellationToken);
+            await GetUserCommandsAndAArgumentsAsync(update.Message.Text, cancellationToken);
             if (null == userData)
                 _checkName = false;
             else
                 _checkName = true;
-                
-            //_command = Const.GetUserCommands(userInput);
-            //_arguments = Const.GetUserArguments(userInput);
+            
+
+            await botClient.SendMessage(
+                update.Message.Chat, 
+                $"Получил '{update.Message.Text}'", 
+                replyMarkup: _replyKeyboardMarkup,
+                cancellationToken: cancellationToken
+            );
             try
             {
                 switch (_command)
                 {
                     case Const.CmStart:
-                        //
                         if(null == userData)
-                            userData = await _userService.RegisterUserAsync(update.Message.From.Id, update.Message.From.Username, ct);
-
+                            userData = await _userService.RegisterUserAsync(update.Message.From.Id, update.Message.From.Username, cancellationToken);
+                        
                         if (maxLengthList == 0)
                         {
-                            await botClient.SendMessage(update.Message.Chat, Const.ReplaceText("Введите максимально допустимое количество задач:", userData), ct);
+                            await botClient.SendMessage(update.Message.Chat, Const.ReplaceText("Введите максимально допустимое количество задач:", userData), cancellationToken: cancellationToken);
                             maxLengthList = Const.ParseAndValidateInt(Console.ReadLine(), 1, 100);
                         }
                         if (taskLengthLimittaskLength == 0)
                         {
-                            await botClient.SendMessage(update.Message.Chat, Const.ReplaceText("Введите максимально допустимую длину задачи:", userData), ct);
+                            await botClient.SendMessage(update.Message.Chat, Const.ReplaceText("Введите максимально допустимую длину задачи:", userData), cancellationToken: cancellationToken);
                             taskLengthLimittaskLength = Const.ParseAndValidateInt(Console.ReadLine(), 1, 100);
                         }
                         break;
                     case Const.CmInfo:
-                        await botClient.SendMessage(update.Message.Chat, Const.ReplaceText($"Релиз {Const.DateRelise} \r\n Версия {Const.VersionBot}", userData), ct);
+                        await botClient.SendMessage(update.Message.Chat, Const.ReplaceText($"Релиз {Const.DateRelise} \r\n Версия {Const.VersionBot}", userData), cancellationToken: cancellationToken);
                         break;
                     case Const.CmHelp:
                         await botClient.SendMessage(
                             update.Message.Chat, 
                             Const.ReplaceText(Const.PrintHelp(_checkName), userData), 
-                            ct
+                            cancellationToken: cancellationToken
                         );
                         break;
                     case Const.CmExit:
-                    //_exit = true;
+                        
                         return;
                     case Const.CmAddTask:
-                        if (!(await CheckAnonimusAsync(userData, botClient, update, ct)))
+                        if (!(await CheckAnonimusAsync(userData, botClient, update, cancellationToken)))
                             break;
-                        var temp = await _toDoService.GetAllByUserIdAsync(userData.UserId, ct);
+                        var temp = await _toDoService.GetAllByUserIdAsync(userData.UserId, cancellationToken);
                         if (temp.Count == maxLengthList)
                             throw new CustomException("Список заполнен");
                         if (_arguments.Length > taskLengthLimittaskLength)
                             throw new CustomException("Длина превышает разрешенную");
                         if (!string.IsNullOrEmpty(_arguments))
-                            await _toDoService.AddAsync(userData, _arguments, ct);
+                            await _toDoService.AddAsync(userData, _arguments, cancellationToken);
                         break;
                     case Const.CmShowTasks:
-                        if (!await CheckAnonimusAsync(userData, botClient, update, ct))
+                        if (!await CheckAnonimusAsync(userData, botClient, update, cancellationToken))
                             break;
-                        var retItems = await _toDoService.GetActiveByUserIdAsync(userData.UserId, ct);
+                        var retItems = await _toDoService.GetActiveByUserIdAsync(userData.UserId, cancellationToken);
                         var retString = "";
-                        if (retItems == null)
+                        if (retItems == null || retItems.Count == 0)
                             retString = "Список пуст";
                         else
                             foreach (var item in retItems)
-                                retString += $"{item.CreateAT}  {item.TaskName} {item.GuidId}\r\n";
-                        await botClient.SendMessage(update.Message.Chat, Const.ReplaceText($"{retString}", userData), ct);
+                                retString += $"{item.CreateAT}  {item.TaskName} `{item.GuidId}`\r\n";
+                        await botClient.SendMessage(update.Message.Chat, Const.ReplaceText($"{retString}", userData), cancellationToken: cancellationToken);
                         break;
                     case Const.CmRemoveTask:
-                        if (!await CheckAnonimusAsync(userData, botClient, update, ct))
+                        if (!await CheckAnonimusAsync(userData, botClient, update, cancellationToken))
                             break;
-                        //_toDoService.GetActiveByUserId(userData.UserId);
-                        if ((await _toDoService.GetAllByUserIdAsync(userData.UserId, ct)).Count != 0)
+                        if ((await _toDoService.GetAllByUserIdAsync(userData.UserId, cancellationToken)).Count != 0)
                         {
                             if (Guid.TryParse(_arguments, out Guid id))
-                                await _toDoService.DeleteAsync(id, ct);
+                                await _toDoService.DeleteAsync(id, cancellationToken);
                             else
-                                await botClient.SendMessage(update.Message.Chat, "Введен не Guid", ct);
+                                await botClient.SendMessage(update.Message.Chat, "Введен не Guid", cancellationToken: cancellationToken);
                         }
                         else
-                            await botClient.SendMessage(update.Message.Chat, Const.ReplaceText("Список пуст", userData), ct);
+                            await botClient.SendMessage(update.Message.Chat, Const.ReplaceText("Список пуст", userData),    cancellationToken: cancellationToken);
                         break;
                     case Const.CmShowAllTasks:
-                        if (!await CheckAnonimusAsync(userData, botClient, update, ct))
+                        if (!await CheckAnonimusAsync(userData, botClient, update, cancellationToken))
                             break;
-                        var retItemsALL = await _toDoService.GetAllByUserIdAsync(userData.UserId, ct);
+                        var retItemsALL = await _toDoService.GetAllByUserIdAsync(userData.UserId, cancellationToken);
                         var retStringALL = "";
-                        if (retItemsALL == null)
+                        if (retItemsALL == null || retItemsALL.Count == 0)
                             retString = "Список пуст";
                         else
                             foreach (var item in retItemsALL)
-                                retStringALL += $"{item.CreateAT} {item.State} {item.TaskName} {item.GuidId}\r\n";
-                        await botClient.SendMessage(update.Message.Chat, Const.ReplaceText($"{retStringALL}", userData), ct);
+                                retStringALL += $"{item.CreateAT} {item.State} {item.TaskName} `{item.GuidId}`\r\n";
+                        await botClient.SendMessage(update.Message.Chat, Const.ReplaceText($"{retStringALL}", userData), cancellationToken: cancellationToken);
                         break;
 
                     case Const.CmCompleteTask:
-                        if (!await CheckAnonimusAsync(userData, botClient, update, ct))
+                        if (!await CheckAnonimusAsync(userData, botClient, update, cancellationToken))
                             break;
                         Const.ValidateString(_arguments);
-                        var retItemsCT = await _toDoService.GetAllByUserIdAsync(userData.UserId, ct);
+                        var retItemsCT = await _toDoService.GetAllByUserIdAsync(userData.UserId, cancellationToken);
                         var retStringCT = "";
                         if (Guid.TryParse(_arguments, out Guid result))
                         {
@@ -149,72 +148,67 @@ namespace OtusHomeWork2026.TelegramBot
                                 retStringCT = "Список пуст";
                             else
                             {
-                                await _toDoService.MarkCompletedAsync(result, ct);
+                                await _toDoService.MarkCompletedAsync(result, cancellationToken);
                                 retStringCT = "Задача помечена как выполненая";
                             }
                         }
                         else
                             retStringCT = "Введен не GUID задачи";
-                        await botClient.SendMessage(update.Message.Chat, Const.ReplaceText($"{retStringCT}", userData), ct);
+                        await botClient.SendMessage(update.Message.Chat, Const.ReplaceText($"{retStringCT}", userData), cancellationToken: cancellationToken);
                         break;
                     case Const.CmReport:
-                        if (!await CheckAnonimusAsync(userData, botClient, update, ct))
+                        if (!await CheckAnonimusAsync(userData, botClient, update, cancellationToken))
                             break;
-                        (int total, int completed, int active, DateTime generatedAt) = await _toDoReportService.GetUserStatsAsync(userData.UserId, ct);
-                        await botClient.SendMessage(update.Message.Chat, $"Статистика по задачам на {generatedAt}. Всего: {total}; Завершенных: {completed}; Активных: {active};", ct);
+                        (int total, int completed, int active, DateTime generatedAt) = await _toDoReportService.GetUserStatsAsync(userData.UserId, cancellationToken);
+                        await botClient.SendMessage(update.Message.Chat, $"Статистика по задачам на {generatedAt}. Всего: {total}; Завершенных: {completed}; Активных: {active};", cancellationToken: cancellationToken);
                         break;
                     case Const.CmFind:
-                        if (!await CheckAnonimusAsync(userData, botClient, update, ct))
+                        if (!await CheckAnonimusAsync(userData, botClient, update, cancellationToken))
                             break;
-                        var retItemsF = await _toDoService.FindAsync(userData, _arguments, ct);
+                        var retItemsF = await _toDoService.FindAsync(userData, _arguments, cancellationToken);
                         var retStringF = "";
                         if (retItemsF == null)
                             retStringF = "Список пуст";
                         else
                             foreach (var item in retItemsF)
                                 retStringF += $"{item.CreateAT}  {item.TaskName} {item.GuidId}\r\n";
-                        await botClient.SendMessage(update.Message.Chat, Const.ReplaceText($"{retStringF}", userData), ct);
-                        break;
-
+                        await botClient.SendMessage(update.Message.Chat, Const.ReplaceText($"{retStringF}", userData), cancellationToken: cancellationToken);
                         break;
                     default:
-                        await botClient.SendMessage(update.Message.Chat, Const.ReplaceText("Не корректная команда или не задан параметр, повторите ввод.", userData), ct);
+                        await botClient.SendMessage(update.Message.Chat, Const.ReplaceText("Не корректная команда или не задан параметр, повторите ввод.", userData),   cancellationToken: cancellationToken);
                         await botClient.SendMessage(
                             update.Message.Chat,
                             Const.ReplaceText(Const.PrintHelp(_checkName), userData),
-                            ct
+                            cancellationToken: cancellationToken
                         );
                         break;
                 }
             }
             catch (CustomException ex)
             {
-                await botClient.SendMessage(update.Message.Chat, Const.ReplaceText($"Ошибка: {ex.Message}", userData), ct);
+                await botClient.SendMessage(update.Message.Chat, Const.ReplaceText($"Ошибка: {ex.Message}", userData),  cancellationToken: cancellationToken);
             }
-        //} while (!_exit);
         }
-        internal async Task<bool> CheckAnonimusAsync(ToDoUser user, ITelegramBotClient botClient, Update update, CancellationToken ct)
+        internal async Task<bool> CheckAnonimusAsync(ToDoUser user, ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
         {
             if (user == null)
             {
-                await botClient.SendMessage(update.Message.Chat,$"Для начала работы используйте команду {Const.CmStart}.", ct);
+                await botClient.SendMessage(update.Message.Chat,$"Для начала работы используйте команду {Const.CmStart}.", cancellationToken: cancellationToken);
                 return false;
             }
 
             return true;
         }
 
-        public async Task HandleErrorAsync(ITelegramBotClient botClient, Exception exception, CancellationToken ct)
+        public async Task HandleErrorAsync(ITelegramBotClient botClient, Exception exception, HandleErrorSource source, CancellationToken cancellationToken)
         {
             Console.WriteLine(exception.Message);
 
             //return Task.CompletedTask;
         }
 
-        //private async Task<(string , string)> GetUserCommandsAndAArgumentsAsync(string userInput, CancellationToken ct)
-        private async Task GetUserCommandsAndAArgumentsAsync(string userInput, CancellationToken ct)
+        private async Task GetUserCommandsAndAArgumentsAsync(string userInput, CancellationToken cancellationToken)
         {
-            //_arguments = string.Empty;
             string[] arr = userInput.Split(' ');
             if (arr.Length > 0)
             {
@@ -223,7 +217,6 @@ namespace OtusHomeWork2026.TelegramBot
                     for (int i = 1; i < arr.Length; i++)
                         _arguments = string.Join(" ", _arguments, arr[i].Trim()).Trim();
             }
-            //return ()
         }
     }
 }
