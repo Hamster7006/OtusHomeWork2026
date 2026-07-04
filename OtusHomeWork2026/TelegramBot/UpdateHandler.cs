@@ -36,15 +36,10 @@ namespace OtusHomeWork2026.TelegramBot
 
         public async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken ct)
         {
-            //await botClient.SendMessage(
-            //        update.Message.Chat,$"Добро пожаловать в прогрaмму!\r\nДоступные комманды:\r\n - {Const.PrintAvalibleComands(false)}", ct);
-
-            //do
-            //{
             await botClient.SendMessage(update.Message.Chat, $"Получил '{update.Message.Text}'", ct);
             _command = string.Empty;
             _arguments = string.Empty;
-            //var userInput = Console.ReadLine();
+
             userData = await _userService.GetUserAsync(update.Message.From.Id, ct);
             await GetUserCommandsAndAArgumentsAsync(update.Message.Text, ct);
             if (null == userData)
@@ -52,14 +47,11 @@ namespace OtusHomeWork2026.TelegramBot
             else
                 _checkName = true;
                 
-            //_command = Const.GetUserCommands(userInput);
-            //_arguments = Const.GetUserArguments(userInput);
             try
             {
                 switch (_command)
                 {
                     case Const.CmStart:
-                        //
                         if(null == userData)
                             userData = await _userService.RegisterUserAsync(update.Message.From.Id, update.Message.From.Username, ct);
 
@@ -85,7 +77,6 @@ namespace OtusHomeWork2026.TelegramBot
                         );
                         break;
                     case Const.CmExit:
-                    //_exit = true;
                         return;
                     case Const.CmAddTask:
                         if (!(await CheckAnonimusAsync(userData, botClient, update, ct)))
@@ -103,7 +94,7 @@ namespace OtusHomeWork2026.TelegramBot
                             break;
                         var retItems = await _toDoService.GetActiveByUserIdAsync(userData.UserId, ct);
                         var retString = "";
-                        if (retItems == null)
+                        if (retItems.Count == 0)
                             retString = "Список пуст";
                         else
                             foreach (var item in retItems)
@@ -113,7 +104,6 @@ namespace OtusHomeWork2026.TelegramBot
                     case Const.CmRemoveTask:
                         if (!await CheckAnonimusAsync(userData, botClient, update, ct))
                             break;
-                        //_toDoService.GetActiveByUserId(userData.UserId);
                         if ((await _toDoService.GetAllByUserIdAsync(userData.UserId, ct)).Count != 0)
                         {
                             if (Guid.TryParse(_arguments, out Guid id))
@@ -129,7 +119,7 @@ namespace OtusHomeWork2026.TelegramBot
                             break;
                         var retItemsALL = await _toDoService.GetAllByUserIdAsync(userData.UserId, ct);
                         var retStringALL = "";
-                        if (retItemsALL == null)
+                        if (retItemsALL.Count == 0)
                             retString = "Список пуст";
                         else
                             foreach (var item in retItemsALL)
@@ -145,7 +135,7 @@ namespace OtusHomeWork2026.TelegramBot
                         var retStringCT = "";
                         if (Guid.TryParse(_arguments, out Guid result))
                         {
-                            if (retItemsCT == null)
+                            if (retItemsCT.Count == 0)
                                 retStringCT = "Список пуст";
                             else
                             {
@@ -168,14 +158,12 @@ namespace OtusHomeWork2026.TelegramBot
                             break;
                         var retItemsF = await _toDoService.FindAsync(userData, _arguments, ct);
                         var retStringF = "";
-                        if (retItemsF == null)
+                        if (retItemsF.Count == 0)
                             retStringF = "Список пуст";
                         else
                             foreach (var item in retItemsF)
                                 retStringF += $"{item.CreateAT}  {item.TaskName} {item.GuidId}\r\n";
                         await botClient.SendMessage(update.Message.Chat, Const.ReplaceText($"{retStringF}", userData), ct);
-                        break;
-
                         break;
                     default:
                         await botClient.SendMessage(update.Message.Chat, Const.ReplaceText("Не корректная команда или не задан параметр, повторите ввод.", userData), ct);
@@ -191,7 +179,6 @@ namespace OtusHomeWork2026.TelegramBot
             {
                 await botClient.SendMessage(update.Message.Chat, Const.ReplaceText($"Ошибка: {ex.Message}", userData), ct);
             }
-        //} while (!_exit);
         }
         internal async Task<bool> CheckAnonimusAsync(ToDoUser user, ITelegramBotClient botClient, Update update, CancellationToken ct)
         {
@@ -200,21 +187,15 @@ namespace OtusHomeWork2026.TelegramBot
                 await botClient.SendMessage(update.Message.Chat,$"Для начала работы используйте команду {Const.CmStart}.", ct);
                 return false;
             }
-
             return true;
         }
 
         public async Task HandleErrorAsync(ITelegramBotClient botClient, Exception exception, CancellationToken ct)
         {
             Console.WriteLine(exception.Message);
-
-            //return Task.CompletedTask;
         }
-
-        //private async Task<(string , string)> GetUserCommandsAndAArgumentsAsync(string userInput, CancellationToken ct)
         private async Task GetUserCommandsAndAArgumentsAsync(string userInput, CancellationToken ct)
         {
-            //_arguments = string.Empty;
             string[] arr = userInput.Split(' ');
             if (arr.Length > 0)
             {
@@ -223,7 +204,6 @@ namespace OtusHomeWork2026.TelegramBot
                     for (int i = 1; i < arr.Length; i++)
                         _arguments = string.Join(" ", _arguments, arr[i].Trim()).Trim();
             }
-            //return ()
         }
     }
 }
