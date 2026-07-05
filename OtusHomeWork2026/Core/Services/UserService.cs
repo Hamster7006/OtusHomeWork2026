@@ -17,18 +17,14 @@ namespace OtusHomeWork2026.Core.Services
         {
             userRepository = new InMemoryUserRepository();
         }
-        public ToDoUser? GetUser(long telegramUserId)
+        public async Task<ToDoUser?> GetUserAsync(long telegramUserId, CancellationToken ct)
         {
-            var user = new ToDoUser();
-            if (user.TelegramUserId == telegramUserId)
-                return user;
-            else
-                return null;
+             return await userRepository.GetUserByTelegramUserIdAsync(telegramUserId, ct);
         }
-
-        public ToDoUser RegisterUser(long telegramUserId, string telegramUserName)
+        public async Task<ToDoUser> RegisterUserAsync(long telegramUserId, string telegramUserName, CancellationToken ct)
         {
             var user = new ToDoUser(telegramUserName, telegramUserId);
+            await userRepository.AddAsync(user, ct);
             return user;
         }
     }

@@ -10,23 +10,22 @@ namespace OtusHomeWork2026
     {
         static void Main(string[] args)
         {
-            var handler = new UpdateHandler();
-            var update = new Update();
-            var botClient = new ConsoleBotClient();
-            botClient.StartReceiving(handler);
+            try
+            {
+                using var cts = new CancellationTokenSource();
+                var handler = new UpdateHandler();
+                var botClient = new ConsoleBotClient();
+                botClient.StartReceiving(handler, cts.Token);
+            }
+            catch (CustomException ex)
+            {
+                Console.WriteLine("Произошла непредвиденная ошибка: ");
+                Console.WriteLine($"Type of exception: {ex.GetType()}");
+                Console.WriteLine($"Message: {ex.Message}");
+                Console.WriteLine($"StackTrace: {ex.StackTrace}");
+                Console.WriteLine($"InnerException: {ex.InnerException}");
+            }
 
-            //do
-            //{
-                try
-                {
-                    new UpdateHandler().HandleUpdateAsync(botClient, update);
-                }
-                catch (CustomException ex)
-                {
-                    botClient.SendMessage(update.Message.Chat, $"Ошибка: \r\n Type: {ex.GetType()} \r\n Message: {ex.Message} \r\n StackTrace: {ex.StackTrace} \r\n InnerException: {ex.InnerException} \r\n");
-                }
-            //}
-            //while (true);
         }
     }
 }

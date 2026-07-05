@@ -1,4 +1,5 @@
-﻿using OtusHomeWork2026.Core.Entities;
+﻿using Otus.ToDoList.ConsoleBot.Types;
+using OtusHomeWork2026.Core.Entities;
 using OtusHomeWork2026.Core.Exceptions;
 using System;
 using System.Collections.Generic;
@@ -97,31 +98,11 @@ namespace OtusHomeWork2026.TelegramBot
             if (string.IsNullOrWhiteSpace(str))
                 throw new CustomException("Строка пустая или состоит из пробелов");
         }
-        static internal string GetUserCommands(string userInput)
-        {
-            string[] arr = userInput.Split(' ');
-            return  arr[0].Trim();
-        }
-        static internal string GetUserArguments(string userInput)
-        {
-            string _arguments = string.Empty;
-            string[] arr = userInput.Split(' ');
-            if (arr.Length > 0)
-            {
-                if (arr.Length > 1)
-                {
-                    for (int i = 1; i < arr.Length; i++)
-                        _arguments = string.Join(" ", _arguments, arr[i].Trim()).Trim();
-                }
-            }
-            return _arguments;
-        }
-
-        static internal string ReplaceText(string text, ToDoUser? user)
+        
+        static internal string ReplaceText(string text, ToDoUser? userName = null)
         { 
-            if(user != null) 
-                if(user.TelegramUserName != null)
-                    text = $"{user.TelegramUserName}, {text}";
+            if(userName != null)
+                text = $"{userName.TelegramUserName},\r\n{text}";
             return text;
         }
     }

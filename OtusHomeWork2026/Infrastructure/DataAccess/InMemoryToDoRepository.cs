@@ -11,47 +11,44 @@ namespace OtusHomeWork2026.Infrastructure.DataAccess
 {
     internal class InMemoryToDoRepository : IToDoRepository
     {
-        List<ToDoItem> _toDoItems = new List<ToDoItem>();
-        public void Add(ToDoItem item)
+        List<ToDoItem> toDoItems;
+        public InMemoryToDoRepository()
         {
-            _toDoItems.Add(item);
+            toDoItems = new List<ToDoItem>();
         }
-
-        public int CountActive(Guid userId)
+        public async Task AddAsync(ToDoItem item, CancellationToken ct)
         {
-            return _toDoItems.Where(x => x.User.UserId == userId && x.State == ToDoItemState.Active).Count();
+            toDoItems.Add(item);
         }
-
-        public void Delete(Guid id)
+        public async Task<int> CountActiveAsync(Guid userId, CancellationToken ct)
         {
-            var toDoItem = Get(id);
+            return toDoItems.Where(x => x.User.UserId == userId && x.State == ToDoItemState.Active).Count();
+        }
+        public async Task DeleteAsync(Guid id, CancellationToken ct)
+        {
+            var toDoItem = await GetAsync(id,ct);
             if (toDoItem != null)
-                _toDoItems.Remove(toDoItem);
+                toDoItems.Remove(toDoItem);
         }
-
-        public bool ExistsByName(Guid userId, string name)
+        public async Task<bool> ExistsByNameAsync(Guid userId, string name, CancellationToken ct)
         {
-            return _toDoItems.Where(x => x.User.UserId == userId && x.TaskName == name).Any();
+            return toDoItems.Where(x => x.User.UserId == userId && x.TaskName == name).Any();
         }
-
-        public ToDoItem? Get(Guid id)
+        public async Task<ToDoItem?> GetAsync(Guid id, CancellationToken ct)
         {
-            return _toDoItems.Where(x => x.GuidId == id).FirstOrDefault();
+            return toDoItems.Where(x => x.GuidId == id).FirstOrDefault();
         }
-
-        public IReadOnlyList<ToDoItem> GetActiveByUserId(Guid userId)
+        public async Task<IReadOnlyList<ToDoItem>> GetActiveByUserIdAsync(Guid userId, CancellationToken ct)
         {
-            return _toDoItems.Where(x => x.User.UserId == userId && x.State == ToDoItemState.Active).ToList();
+            return toDoItems.Where(x => x.User.UserId == userId && x.State == ToDoItemState.Active).ToList();
         }
-
-        public IReadOnlyList<ToDoItem> GetAllByUserId(Guid userId)
+        public async Task<IReadOnlyList<ToDoItem>> GetAllByUserIdAsync(Guid userId, CancellationToken ct)
         {
-            return _toDoItems.Where(x => x.User.UserId == userId).ToList();
+            return toDoItems.Where(x => x.User.UserId == userId).ToList();
         }
-
-        public void Update(ToDoItem item)
+        public async Task UpdateAsync(ToDoItem item, CancellationToken ct)
         {
-            var toDoItem = _toDoItems.Where(x => Equals(x, item)).FirstOrDefault();
+            var toDoItem = toDoItems.Where(x => Equals(x, item)).FirstOrDefault();
             if (toDoItem != null)
             {
                 toDoItem.State = ToDoItemState.Completed;
