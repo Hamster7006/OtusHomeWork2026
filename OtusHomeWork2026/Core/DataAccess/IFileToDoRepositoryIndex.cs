@@ -11,7 +11,8 @@ namespace OtusHomeWork2026.Core.DataAccess
     {
         Task Add(Guid guidTask, Guid guidUser);
         Task<ToDoItemUserIndex> Get(Guid guidTask);
-        Task<List<ToDoItemUserIndex>> Init(string toDoItemReprositoryPath);
+        //Task<List<ToDoItemUserIndex>> Init(string toDoItemReprositoryPath);
+        Task Init(string toDoItemReprositoryPath);
         Task Delete(Guid guidTask, string toDoItemRepositoryFolder);
     }
 }

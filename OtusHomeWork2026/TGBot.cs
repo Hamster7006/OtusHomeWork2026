@@ -22,8 +22,9 @@ namespace OtusHomeWork2026
         {
             var pathInfo = new
             {
-                toDoUserFolderName = "toDoUserFolder",
-                toDoItemFolderName = "toDoItemFolder"
+                toDoUserFolderName = "Data\\toDoUserFolder",
+                toDoItemFolderName = "Data\\toDoItemFolder",
+                fileIndex = "Data\\fileIndex.json"
             };
 
             #region Получение токена
@@ -71,7 +72,7 @@ namespace OtusHomeWork2026
 
                 // Устанавливаем команды
                 await botClient.SetMyCommands(commands);
-                var handler = new UpdateHandler(pathInfo.toDoUserFolderName, pathInfo.toDoItemFolderName);
+                var handler = new UpdateHandler(pathInfo.toDoUserFolderName, pathInfo.toDoItemFolderName, pathInfo.fileIndex);
                 botClient.StartReceiving(handler, receiverOptions, cancellationTokenSource.Token);
                 var me = await botClient.GetMe();
                 Console.WriteLine($"{me.FirstName} запущен!");

@@ -24,7 +24,8 @@ namespace OtusHomeWork2026.TelegramBot
         IToDoService _toDoService;
         IUserService _userService;
         IToDoRepository _toDoRepository;
-        IUserRepository _userRepository;
+        //IUserRepository _userRepository;
+
         IToDoReportService _toDoReportService;
         IFileToDoRepositoryIndex _toDoRepositoryIndex;
         private ToDoUser? userData;
@@ -33,13 +34,17 @@ namespace OtusHomeWork2026.TelegramBot
 
         public UpdateHandler(string toDoUserFolderName, string toDoItemFolderName, string fileIndex)
         {
-            _userService = new UserService();
-            //_toDoRepository = new InMemoryToDoRepository();
             _toDoRepositoryIndex = new FileToDoRepositoryIndex(fileIndex);
-            _toDoRepository =new FileToDoRepository(toDoItemFolderName, _toDoRepositoryIndex);
-            _userRepository = new FileUserRepository(toDoUserFolderName);
+            _toDoRepositoryIndex.Init(toDoItemFolderName);
+            _toDoRepository = new FileToDoRepository(toDoItemFolderName, _toDoRepositoryIndex);
+
+            _userService = new UserService(toDoUserFolderName);
             _toDoService = new ToDoService(_toDoRepository);
+
             _toDoReportService = new ToDoReportService(_toDoRepository);
+            //_toDoRepository = new InMemoryToDoRepository();
+            //_userRepository = new FileUserRepository(toDoUserFolderName);
+
             _replyKeyboardMarkup = new ReplyKeyboardMarkup();
         }
 
@@ -238,8 +243,8 @@ namespace OtusHomeWork2026.TelegramBot
                                     retStringCT = "Список пуст";
                                 else
                                 {
-                                    await _toDoService.MarkCompletedAsync(result, cancellationToken);
-                                    retStringCT = "Задача помечена как выполненая";
+                                        await _toDoService.MarkCompletedAsync(result, cancellationToken);
+                                        retStringCT = "Задача помечена как выполненая";                                  
                                 }
                             }
                             else

@@ -14,9 +14,9 @@ namespace OtusHomeWork2026.Core.Entities
         public long TelegramUserId { get; set; }
         public ToDoUser(string telegramUserName =null, long telegramUserId = 0)
         {
-            RegisteredAt = DateTime.UtcNow;
             UserId = Guid.NewGuid();
             TelegramUserName = telegramUserName;
+            RegisteredAt = DateTime.UtcNow;
             TelegramUserId = telegramUserId;
         }
     }

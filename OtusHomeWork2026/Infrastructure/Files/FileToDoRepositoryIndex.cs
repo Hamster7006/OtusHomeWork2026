@@ -13,17 +13,19 @@ namespace OtusHomeWork2026.Infrastructure.Files
     internal class FileToDoRepositoryIndex : IFileToDoRepositoryIndex
     {
         string pathFileIndex=string.Empty;
-        List<ToDoItemUserIndex> indexList;
+        List<ToDoItemUserIndex> indexList = new List<ToDoItemUserIndex>();
         public FileToDoRepositoryIndex(string pathFileIndex)
         {
             this.pathFileIndex = pathFileIndex;
+            //indexList = new List<ToDoItemUserIndex>();
+            //indexList = new FileToDoRepositoryIndex(pathFileIndex).Init(pathFileIndex);
         }
 
         public async Task Add(Guid guidTask, Guid guidUser)
         {
             var newIndex = new ToDoItemUserIndex(guidTask, guidUser);
             indexList.Add(newIndex);
-            using (StreamWriter sw = new StreamWriter(pathFileIndex))
+            using (StreamWriter sw = new StreamWriter(pathFileIndex, true))
             {
                 sw.WriteLine(JsonSerializer.Serialize(newIndex));
             }
@@ -59,13 +61,15 @@ namespace OtusHomeWork2026.Infrastructure.Files
 
         public async Task<ToDoItemUserIndex?> Get(Guid guidTask)
         {
+            //using (StreamReader sr = new StreamReader(s))
+
             return indexList.Where(x => x.ToDoItemId == guidTask).FirstOrDefault(); 
         }
 
-        public async Task<List<ToDoItemUserIndex>> Init(string toDoItemReprositoryPath)
+        //public async Task<List<ToDoItemUserIndex>> Init(string toDoItemReprositoryPath)
+        public async Task Init(string toDoItemReprositoryPath)
         {
             //List<ToDoItemUserIndex> indexList = new List<ToDoItemUserIndex>();
-            File.Create(pathFileIndex).Dispose();
             foreach (var toDoItemReprositoryPathUser in Directory.GetDirectories(toDoItemReprositoryPath))
             {
                 var userGuid = toDoItemReprositoryPathUser.Split(Path.DirectorySeparatorChar)[^1];
@@ -73,12 +77,18 @@ namespace OtusHomeWork2026.Infrastructure.Files
                     foreach (var tempToDoItem in Directory.GetFiles(toDoItemReprositoryPathUser, "*.json"))
                     {
                         var taskGuid = tempToDoItem.Split(Path.DirectorySeparatorChar)[^1];
-                        if (Guid.TryParse(taskGuid, out Guid resToDoItemGuid))
-                            indexList.Add(new ToDoItemUserIndex(resToDoItemGuid, resUserGuid));
+                        if (Guid.TryParse(taskGuid.Replace(".json",""), out Guid resToDoItemGuid))
+                        {
+                            var newIndex = new ToDoItemUserIndex(resToDoItemGuid, resUserGuid);
+                            indexList.Add(newIndex);
+                            using (StreamWriter sr = new StreamWriter(pathFileIndex, true))
+                            {
+                                    sr.WriteLine(JsonSerializer.Serialize(newIndex));
+                            }
+                        }
                     }
             }
-            return indexList;
-
+            //return indexList;
         }
     }
 }
