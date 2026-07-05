@@ -5,6 +5,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization.Metadata;
 using System.Threading.Tasks;
 using Telegram.Bot;
 using Telegram.Bot.Polling;
@@ -18,16 +20,29 @@ namespace OtusHomeWork2026
     {
         public async Task StartTGBotAsync()
         {
+            var pathInfo = new
+            {
+                toDoUserFolderName = "toDoUserFolder",
+                toDoItemFolderName = "toDoItemFolder"
+            };
+
+            #region Получение токена
+            string token = string.Empty;
+
+            // получение токена ТГ из переменной
             //string? token = Environment.GetEnvironmentVariable("TelegramBotTokenOTUSBasic", EnvironmentVariableTarget.User);
 
-            string token = string.Empty;
-            //token = GetTokenTgBot();
+            //получение токена ТГ из консоли
+            //Console.WriteLine("Ведите токен для ТГ бота");
+            //token = Console.ReadLine();
 
+            //получение токена ТГ из файла
             using (StreamReader reader = new StreamReader("C:\\Users\\Alkesandr\\Desktop\\tgtoken.txt"))
             {
-                token = await reader.ReadToEndAsync();
+                token = reader.ReadToEnd();
                 Console.WriteLine(token);
             }
+            #endregion Получение токена
 
             try
             {
@@ -56,8 +71,7 @@ namespace OtusHomeWork2026
 
                 // Устанавливаем команды
                 await botClient.SetMyCommands(commands);
-                await botClient.SetMyCommands(commands);
-                var handler = new UpdateHandler();
+                var handler = new UpdateHandler(pathInfo.toDoUserFolderName, pathInfo.toDoItemFolderName);
                 botClient.StartReceiving(handler, receiverOptions, cancellationTokenSource.Token);
                 var me = await botClient.GetMe();
                 Console.WriteLine($"{me.FirstName} запущен!");
@@ -95,31 +109,6 @@ namespace OtusHomeWork2026
                 //    cts.Token
                 //);
             }
-        }
-        /// <summary>
-        /// получение токина для тг
-        /// Переписать на DB?\File?
-        /// </summary>
-        /// <returns></returns>
-        private static string GetTokenTgBot()
-        {
-            string _token = string.Empty;
-            bool _checkGetTGToken = false;
-            do
-            {
-                Console.WriteLine("Ведите токен для ТГ бота");
-#pragma warning disable CS8600 // Converting null literal or possible null value to non-nullable type.
-                _token = Console.ReadLine();
-#pragma warning restore CS8600 // Converting null literal or possible null value to non-nullable type.
-                if (string.IsNullOrWhiteSpace(_token))
-                    Console.WriteLine("Введена пуста строка.");
-                else
-                    _checkGetTGToken = true;
-            }
-            while (!_checkGetTGToken);
-#pragma warning disable CS8603 // Possible null reference return.
-            return _token;
-#pragma warning restore CS8603 // Possible null reference return.
         }
     }
 }

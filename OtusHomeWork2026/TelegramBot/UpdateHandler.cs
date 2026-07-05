@@ -4,6 +4,7 @@ using OtusHomeWork2026.Core.Entities;
 using OtusHomeWork2026.Core.Exceptions;
 using OtusHomeWork2026.Core.Services;
 using OtusHomeWork2026.Infrastructure.DataAccess;
+using OtusHomeWork2026.Infrastructure.Files;
 using System;
 using Telegram.Bot;
 using Telegram.Bot.Polling;
@@ -23,14 +24,20 @@ namespace OtusHomeWork2026.TelegramBot
         IToDoService _toDoService;
         IUserService _userService;
         IToDoRepository _toDoRepository;
+        IUserRepository _userRepository;
         IToDoReportService _toDoReportService;
+        IFileToDoRepositoryIndex _toDoRepositoryIndex;
         private ToDoUser? userData;
         ReplyKeyboardMarkup _replyKeyboardMarkup;
 
-        public UpdateHandler()
+
+        public UpdateHandler(string toDoUserFolderName, string toDoItemFolderName, string fileIndex)
         {
             _userService = new UserService();
-            _toDoRepository = new InMemoryToDoRepository();
+            //_toDoRepository = new InMemoryToDoRepository();
+            _toDoRepositoryIndex = new FileToDoRepositoryIndex(fileIndex);
+            _toDoRepository =new FileToDoRepository(toDoItemFolderName, _toDoRepositoryIndex);
+            _userRepository = new FileUserRepository(toDoUserFolderName);
             _toDoService = new ToDoService(_toDoRepository);
             _toDoReportService = new ToDoReportService(_toDoRepository);
             _replyKeyboardMarkup = new ReplyKeyboardMarkup();
