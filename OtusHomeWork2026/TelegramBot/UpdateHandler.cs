@@ -319,7 +319,6 @@ namespace OtusHomeWork2026.TelegramBot
                                             cancellationToken: cancellationToken);
                 return false;
             }
-
             return true;
         }
 

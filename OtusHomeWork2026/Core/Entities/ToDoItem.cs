@@ -11,7 +11,6 @@ namespace OtusHomeWork2026.Core.Entities
         Active,
         Completed
     };
-
     public class ToDoItem
     {
         public Guid GuidId { get; set; }
