@@ -1,10 +1,5 @@
 ﻿using OtusHomeWork2026.Core.Entities;
 using OtusHomeWork2026.Core.Exceptions;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace OtusHomeWork2026.TelegramBot
 {

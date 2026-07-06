@@ -1,14 +1,8 @@
 ﻿using OtusHomeWork2026.Core.DataAccess;
 using OtusHomeWork2026.Core.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Text.Json;
-using System.Threading.Tasks;
-using Telegram.Bot.Types;
 
-namespace OtusHomeWork2026.Infrastructure.Files
+namespace OtusHomeWork2026.Infrastructure.DataAccessFiles
 {
     internal class FileUserRepository : IUserRepository
     {

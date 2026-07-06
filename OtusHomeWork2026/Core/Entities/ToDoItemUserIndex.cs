@@ -1,6 +1,4 @@
-﻿
-
-namespace OtusHomeWork2026.Core.Entities
+﻿namespace OtusHomeWork2026.Core.Entities
 {
     public class ToDoItemUserIndex
     {

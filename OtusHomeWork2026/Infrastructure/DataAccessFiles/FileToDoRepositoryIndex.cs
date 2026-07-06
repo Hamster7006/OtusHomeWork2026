@@ -1,14 +1,10 @@
 ﻿using OtusHomeWork2026.Core.DataAccess;
 using OtusHomeWork2026.Core.Entities;
 using OtusHomeWork2026.Core.Exceptions;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Text.Json;
-using System.Threading.Tasks;
 
-namespace OtusHomeWork2026.Infrastructure.Files
+
+namespace OtusHomeWork2026.Infrastructure.DataAccessFiles
 {
     internal class FileToDoRepositoryIndex : IFileToDoRepositoryIndex
     {
@@ -17,8 +13,6 @@ namespace OtusHomeWork2026.Infrastructure.Files
         public FileToDoRepositoryIndex(string pathFileIndex)
         {
             this.pathFileIndex = pathFileIndex;
-            //indexList = new List<ToDoItemUserIndex>();
-            //indexList = new FileToDoRepositoryIndex(pathFileIndex).Init(pathFileIndex);
         }
 
         public async Task Add(Guid guidTask, Guid guidUser)
@@ -42,34 +36,29 @@ namespace OtusHomeWork2026.Infrastructure.Files
                     File.Delete(pathFileToDelete);
                     indexList.Remove(tempDel);
                 }
-            }
-            catch (Exception ex)
-            {
-                throw new CustomException("Ошибка при удалении задачи");
-            }
-            finally {
+                File.WriteAllText(pathFileIndex, "");
                 foreach (var item in indexList)
                 {
-                    File.WriteAllText(pathFileIndex, "");
-                    using (StreamWriter sw = new StreamWriter(pathFileIndex))
+                    
+                    using (StreamWriter sw = new StreamWriter(pathFileIndex,true))
                     {
                         sw.WriteLine(JsonSerializer.Serialize(item));
                     }
                 }
             }
+            catch (Exception ex)
+            {
+                throw new CustomException("Ошибка при удалении задачи");
+            }
         }
 
         public async Task<ToDoItemUserIndex?> Get(Guid guidTask)
         {
-            //using (StreamReader sr = new StreamReader(s))
-
             return indexList.Where(x => x.ToDoItemId == guidTask).FirstOrDefault(); 
         }
 
-        //public async Task<List<ToDoItemUserIndex>> Init(string toDoItemReprositoryPath)
         public async Task Init(string toDoItemReprositoryPath)
         {
-            //List<ToDoItemUserIndex> indexList = new List<ToDoItemUserIndex>();
             foreach (var toDoItemReprositoryPathUser in Directory.GetDirectories(toDoItemReprositoryPath))
             {
                 var userGuid = toDoItemReprositoryPathUser.Split(Path.DirectorySeparatorChar)[^1];
@@ -88,7 +77,6 @@ namespace OtusHomeWork2026.Infrastructure.Files
                         }
                     }
             }
-            //return indexList;
         }
     }
 }

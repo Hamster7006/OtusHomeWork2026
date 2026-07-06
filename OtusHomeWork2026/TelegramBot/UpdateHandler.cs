@@ -4,8 +4,7 @@ using OtusHomeWork2026.Core.Entities;
 using OtusHomeWork2026.Core.Exceptions;
 using OtusHomeWork2026.Core.Services;
 using OtusHomeWork2026.Infrastructure.DataAccess;
-using OtusHomeWork2026.Infrastructure.Files;
-using System;
+using OtusHomeWork2026.Infrastructure.DataAccessFiles;
 using Telegram.Bot;
 using Telegram.Bot.Polling;
 using Telegram.Bot.Types;
@@ -24,8 +23,6 @@ namespace OtusHomeWork2026.TelegramBot
         IToDoService _toDoService;
         IUserService _userService;
         IToDoRepository _toDoRepository;
-        //IUserRepository _userRepository;
-
         IToDoReportService _toDoReportService;
         IFileToDoRepositoryIndex _toDoRepositoryIndex;
         private ToDoUser? userData;
@@ -37,14 +34,9 @@ namespace OtusHomeWork2026.TelegramBot
             _toDoRepositoryIndex = new FileToDoRepositoryIndex(fileIndex);
             _toDoRepositoryIndex.Init(toDoItemFolderName);
             _toDoRepository = new FileToDoRepository(toDoItemFolderName, _toDoRepositoryIndex);
-
             _userService = new UserService(toDoUserFolderName);
             _toDoService = new ToDoService(_toDoRepository);
-
             _toDoReportService = new ToDoReportService(_toDoRepository);
-            //_toDoRepository = new InMemoryToDoRepository();
-            //_userRepository = new FileUserRepository(toDoUserFolderName);
-
             _replyKeyboardMarkup = new ReplyKeyboardMarkup();
         }
 
@@ -82,23 +74,23 @@ namespace OtusHomeWork2026.TelegramBot
                                                         replyMarkup: _replyKeyboardMarkup,
                                                         cancellationToken: cancellationToken);
                         }
-                        else
-                        {
-                            //if (maxLengthList == 0)
-                            //{
-                            //    await botClient.SendMessage(chat,
-                            //                                Const.ReplaceText("Введите максимально допустимое количество задач:", userData),
-                            //                                cancellationToken: cancellationToken);
-                            //    maxLengthList = Const.ParseAndValidateInt(Console.ReadLine(), 1, 100);
-                            //}
-                            //if (taskLengthLimittaskLength == 0)
-                            //{
-                            //    await botClient.SendMessage(chat,
-                            //                                Const.ReplaceText("Введите максимально допустимую длину задачи:", userData),
-                            //                                cancellationToken: cancellationToken);
-                            //    taskLengthLimittaskLength = Const.ParseAndValidateInt(Console.ReadLine(), 1, 100);
-                            //}
-                        }
+                        
+                        //if (maxLengthList == 0)
+                        //{
+                        //    await botClient.SendMessage(chat,
+                        //                                Const.ReplaceText("Введите максимально допустимое количество задач:", userData),
+                        //                                cancellationToken: cancellationToken);
+                        //    maxLengthList = Const.ParseAndValidateInt(Console.ReadLine(), 1, 100);
+                        //}
+
+                        //if (taskLengthLimittaskLength == 0)
+                        //{
+                        //    await botClient.SendMessage(chat,
+                        //                                Const.ReplaceText("Введите максимально допустимую длину задачи:", userData),
+                        //                                cancellationToken: cancellationToken);
+                        //    taskLengthLimittaskLength = Const.ParseAndValidateInt(Console.ReadLine(), 1, 100);
+                        //}
+                        
                         break;
 
                     case Const.CmInfo:
@@ -138,8 +130,6 @@ namespace OtusHomeWork2026.TelegramBot
                                                     "Введите задачу",
                                                     replyMarkup: _replyKeyboardMarkup,
                                                     cancellationToken: cancellationToken);
-
-                            //throw new CustomException("Задача не может быть пустой");
                             break;
                         }
                         if (_arguments.Length > taskLengthLimittaskLength)
@@ -234,7 +224,6 @@ namespace OtusHomeWork2026.TelegramBot
                         }
                         else
                         {
-                            //Const.ValidateString(_arguments);
                             var retItemsCT = await _toDoService.GetAllByUserIdAsync(userData.UserId, cancellationToken);
                             var retStringCT = "";
                             if (Guid.TryParse(_arguments, out Guid result))

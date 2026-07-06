@@ -1,15 +1,9 @@
 ﻿using OtusHomeWork2026.Core.DataAccess;
 using OtusHomeWork2026.Core.Entities;
-using OtusHomeWork2026.Core.Exceptions;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Text.Json;
-using System.Threading.Tasks;
-using Telegram.Bot.Types;
 
-namespace OtusHomeWork2026.Infrastructure.Files
+
+namespace OtusHomeWork2026.Infrastructure.DataAccessFiles
 {
     internal class FileToDoRepository : IToDoRepository
     {
@@ -21,7 +15,6 @@ namespace OtusHomeWork2026.Infrastructure.Files
                 Directory.CreateDirectory(folderName);
             _folderTaskPath = folderName;
             _ToDoRepositoryIndex = indexList;
-            //_ToDoRepositoryIndex.Init(folderName);
         }
         public async Task AddAsync(ToDoItem item, CancellationToken ct)
         {
@@ -76,7 +69,6 @@ namespace OtusHomeWork2026.Infrastructure.Files
             toDoItem.State = ToDoItemState.Completed;
             toDoItem.ChangedAt = DateTime.Now;
             var tempPath = Path.Combine(_folderTaskPath, $"{toDoItem.User.UserId}", $"{toDoItem.GuidId}.json");
-            //File.WriteAllText(tempPath, "");
             using (StreamWriter sw = new StreamWriter(tempPath))
             {
                 sw.WriteLine(JsonSerializer.Serialize(toDoItem));

@@ -1,14 +1,7 @@
 ﻿using OtusHomeWork2026.Core.DataAccess;
 using OtusHomeWork2026.Core.Entities;
 using OtusHomeWork2026.Core.Exceptions;
-using OtusHomeWork2026.Infrastructure.DataAccess;
-using OtusHomeWork2026.Infrastructure.Files;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
+
 
 namespace OtusHomeWork2026.Core.Services
 {
@@ -16,11 +9,7 @@ namespace OtusHomeWork2026.Core.Services
     {
         IToDoRepository toDoRepository;
         public ToDoService(IToDoRepository toDoRepository) 
-        //public ToDoService(IToDoRepository toDoRepository)
         {
-            //_toDoList = new List<ToDoItem>();
-            //toDoRepository = new InMemoryToDoRepository();
-            //toDoRepository = new FileToDoRepository();
             this.toDoRepository = toDoRepository;
         }
 

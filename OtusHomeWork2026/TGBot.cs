@@ -22,8 +22,8 @@ namespace OtusHomeWork2026
         {
             var pathInfo = new
             {
-                toDoUserFolderName = "Data\\toDoUserFolder",
-                toDoItemFolderName = "Data\\toDoItemFolder",
+                toDoUserFileName = "Data\\toDoUsers.json",
+                toDoItemFolderName = "Data\\toDoItems",
                 fileIndex = "Data\\fileIndex.json"
             };
 
@@ -43,7 +43,19 @@ namespace OtusHomeWork2026
                 token = reader.ReadToEnd();
                 Console.WriteLine(token);
             }
-            #endregion Получение токена
+            #endregion
+
+            #region Проверка существование папок и фалов
+
+            if(Directory.Exists(pathInfo.toDoItemFolderName))
+                Directory.CreateDirectory(pathInfo.toDoItemFolderName);
+
+            if (File.Exists(pathInfo.toDoUserFileName))
+                File.Create(pathInfo.toDoItemFolderName).Dispose();
+
+            if (File.Exists(pathInfo.fileIndex))
+                File.Create(pathInfo.toDoItemFolderName).Dispose();
+            #endregion
 
             try
             {
@@ -72,7 +84,7 @@ namespace OtusHomeWork2026
 
                 // Устанавливаем команды
                 await botClient.SetMyCommands(commands);
-                var handler = new UpdateHandler(pathInfo.toDoUserFolderName, pathInfo.toDoItemFolderName, pathInfo.fileIndex);
+                var handler = new UpdateHandler(pathInfo.toDoUserFileName, pathInfo.toDoItemFolderName, pathInfo.fileIndex);
                 botClient.StartReceiving(handler, receiverOptions, cancellationTokenSource.Token);
                 var me = await botClient.GetMe();
                 Console.WriteLine($"{me.FirstName} запущен!");
@@ -104,11 +116,6 @@ namespace OtusHomeWork2026
                 Console.WriteLine($"Message: {ex.Message}");
                 Console.WriteLine($"StackTrace: {ex.StackTrace}");
                 Console.WriteLine($"InnerException: {ex.InnerException}");
-                //botClient.SendMessage(
-                //    update.Message.Chat,
-                //    $"Ошибка: \r\n Type: {ex.GetType()} \r\n Message: {ex.Message} \r\n StackTrace: {ex.StackTrace} \r\n InnerException: {ex.InnerException} \r\n",
-                //    cts.Token
-                //);
             }
         }
     }
