@@ -5,6 +5,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization.Metadata;
 using System.Threading.Tasks;
 using Telegram.Bot;
 using Telegram.Bot.Polling;
@@ -18,6 +20,13 @@ namespace OtusHomeWork2026
     {
         public async Task StartTGBotAsync()
         {
+            var pathInfo = new
+            {
+                toDoUserFileName = "Data\\toDoUsers.json",
+                toDoItemFolderName = "Data\\toDoItems",
+                fileIndex = "Data\\fileIndex.json"
+            };
+
             #region Получение токена
             string token = string.Empty;
 
@@ -34,7 +43,19 @@ namespace OtusHomeWork2026
                 token = reader.ReadToEnd();
                 Console.WriteLine(token);
             }
-            #endregion Получение токена
+            #endregion
+
+            #region Проверка существование папок и фалов
+
+            if(Directory.Exists(pathInfo.toDoItemFolderName))
+                Directory.CreateDirectory(pathInfo.toDoItemFolderName);
+
+            if (File.Exists(pathInfo.toDoUserFileName))
+                File.Create(pathInfo.toDoItemFolderName).Dispose();
+
+            if (File.Exists(pathInfo.fileIndex))
+                File.Create(pathInfo.toDoItemFolderName).Dispose();
+            #endregion
 
             try
             {
@@ -63,8 +84,7 @@ namespace OtusHomeWork2026
 
                 // Устанавливаем команды
                 await botClient.SetMyCommands(commands);
-                await botClient.SetMyCommands(commands);
-                var handler = new UpdateHandler();
+                var handler = new UpdateHandler(pathInfo.toDoUserFileName, pathInfo.toDoItemFolderName, pathInfo.fileIndex);
                 botClient.StartReceiving(handler, receiverOptions, cancellationTokenSource.Token);
                 var me = await botClient.GetMe();
                 Console.WriteLine($"{me.FirstName} запущен!");
@@ -96,37 +116,7 @@ namespace OtusHomeWork2026
                 Console.WriteLine($"Message: {ex.Message}");
                 Console.WriteLine($"StackTrace: {ex.StackTrace}");
                 Console.WriteLine($"InnerException: {ex.InnerException}");
-                //botClient.SendMessage(
-                //    update.Message.Chat,
-                //    $"Ошибка: \r\n Type: {ex.GetType()} \r\n Message: {ex.Message} \r\n StackTrace: {ex.StackTrace} \r\n InnerException: {ex.InnerException} \r\n",
-                //    cts.Token
-                //);
             }
-        }
-        /// <summary>
-        /// получение токина для тг
-        /// Переписать на DB?\File?
-        /// </summary>
-        /// <returns></returns>
-        private static string GetTokenTgBot()
-        {
-            string _token = string.Empty;
-            bool _checkGetTGToken = false;
-            do
-            {
-                Console.WriteLine("Ведите токен для ТГ бота");
-#pragma warning disable CS8600 // Converting null literal or possible null value to non-nullable type.
-                _token = Console.ReadLine();
-#pragma warning restore CS8600 // Converting null literal or possible null value to non-nullable type.
-                if (string.IsNullOrWhiteSpace(_token))
-                    Console.WriteLine("Введена пуста строка.");
-                else
-                    _checkGetTGToken = true;
-            }
-            while (!_checkGetTGToken);
-#pragma warning disable CS8603 // Possible null reference return.
-            return _token;
-#pragma warning restore CS8603 // Possible null reference return.
         }
     }
 }

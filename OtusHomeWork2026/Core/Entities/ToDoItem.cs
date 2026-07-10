@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace OtusHomeWork2026.Core.Entities
+﻿namespace OtusHomeWork2026.Core.Entities
 {
     public enum ToDoItemState
     {
@@ -19,10 +13,10 @@ namespace OtusHomeWork2026.Core.Entities
         public ToDoUser User { get; set; }
         public ToDoItemState State { get; set; }
         public DateTime ChangedAt { get; set; }
-        public ToDoItem(ToDoUser user, string name)
+        public ToDoItem(ToDoUser user, string taskName)
         {
             GuidId = Guid.NewGuid();
-            TaskName = name;
+            TaskName = taskName;
             User = user;
             State = ToDoItemState.Active;
             CreateAT = DateTime.Now;
