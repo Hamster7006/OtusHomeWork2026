@@ -12,7 +12,6 @@ namespace OtusHomeWork2026.Core.Services
         {
             this.toDoRepository = toDoRepository;
         }
-
         public async Task<ToDoItem> AddAsync(ToDoUser user, string name, CancellationToken ct)
         {
             var tempTodo = new ToDoItem(user, name);
@@ -24,12 +23,10 @@ namespace OtusHomeWork2026.Core.Services
                 return tempTodo;
             }
         }
-
         public async Task DeleteAsync(Guid id, CancellationToken ct)
         {
             await toDoRepository.DeleteAsync(id, ct);
         }
-
         public async Task<IReadOnlyList<ToDoItem>> GetActiveByUserIdAsync(Guid userId, CancellationToken ct)
         {
             if (null == toDoRepository)
@@ -37,7 +34,6 @@ namespace OtusHomeWork2026.Core.Services
             else
                 return await toDoRepository.GetActiveByUserIdAsync(userId, ct);
         }
-
         public async Task<IReadOnlyList<ToDoItem>> GetAllByUserIdAsync(Guid userId, CancellationToken ct)
         {
             if(null == toDoRepository)
@@ -45,7 +41,6 @@ namespace OtusHomeWork2026.Core.Services
             else
                 return await toDoRepository.GetAllByUserIdAsync(userId, ct);
         }
-
         public async Task MarkCompletedAsync(Guid id, CancellationToken ct)
         {
             var tempTodo = await toDoRepository.GetAsync(id, ct);
