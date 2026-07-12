@@ -1,5 +1,6 @@
 ﻿using OtusHomeWork2026.Core.Exceptions;
 using OtusHomeWork2026.TelegramBot;
+using OtusHomeWork2026.TelegramBot.Scenarios;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -51,10 +52,10 @@ namespace OtusHomeWork2026
                 Directory.CreateDirectory(pathInfo.toDoItemFolderName);
 
             if (File.Exists(pathInfo.toDoUserFileName))
-                File.Create(pathInfo.toDoItemFolderName).Dispose();
+                File.Create(pathInfo.toDoUserFileName).Dispose();
 
             if (File.Exists(pathInfo.fileIndex))
-                File.Create(pathInfo.toDoItemFolderName).Dispose();
+                File.Create(pathInfo.fileIndex).Dispose();
             #endregion
 
             try
@@ -66,6 +67,10 @@ namespace OtusHomeWork2026
                     AllowedUpdates = [UpdateType.Message],
                     DropPendingUpdates = true
                 };
+
+                IEnumerable<IScenario> scenarios = new List<IScenario>();
+                var scenarioContextRepository = new InMemoryScenarioContextRepository();
+
                 // Создаем список команд
                 var commands = new List<BotCommand>
                 {
@@ -84,7 +89,13 @@ namespace OtusHomeWork2026
 
                 // Устанавливаем команды
                 await botClient.SetMyCommands(commands);
-                var handler = new UpdateHandler(pathInfo.toDoUserFileName, pathInfo.toDoItemFolderName, pathInfo.fileIndex);
+                var handler = new UpdateHandler(pathInfo.toDoUserFileName,
+                                                pathInfo.toDoItemFolderName,
+                                                pathInfo.fileIndex,
+                                                scenarios,
+                                                scenarioContextRepository,
+                                                botClient
+                                                );
                 botClient.StartReceiving(handler, receiverOptions, cancellationTokenSource.Token);
                 var me = await botClient.GetMe();
                 Console.WriteLine($"{me.FirstName} запущен!");

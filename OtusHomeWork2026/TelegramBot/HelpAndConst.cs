@@ -1,13 +1,14 @@
 ﻿using OtusHomeWork2026.Core.Entities;
 using OtusHomeWork2026.Core.Exceptions;
+using Telegram.Bot.Types.ReplyMarkups;
 
 namespace OtusHomeWork2026.TelegramBot
 {
     internal static class Const
     {
 
-        internal static readonly DateTime DateRelise = new DateTime(2026, 2, 28);
-        internal static readonly string VersionBot = "1.6.1";
+        internal static readonly DateTime DateRelise = new DateTime(2026, 07, 12);
+        internal static readonly string VersionBot = "1.11.3";
        
         internal const string CmStart = "/start";
         internal const string CmStartDescription = $"запускает знакомство, после которого достуны дополнительные команды";
@@ -31,6 +32,9 @@ namespace OtusHomeWork2026.TelegramBot
         internal const string CmReportDescription = $"отчет по всем задачам";
         internal const string CmFind = "/find";
         internal const string CmFindDescription = $"поиск задачи по начальным словам";
+        internal const string CmCansel = "/Cansel";
+        internal const string CmCanselDescription = $"отмена операции";
+
 
         internal static string PrintHelp(bool checkUser)
         {
@@ -49,6 +53,7 @@ namespace OtusHomeWork2026.TelegramBot
                 temp += $"{CmCompleteTask} <Guid> - {CmCompleteTaskDescription}\r\n";
                 temp += $"{CmReport} - {CmReportDescription}\r\n";
                 temp += $"{CmFind} - {CmFindDescription}\r\n";
+                temp += $"{CmCansel} - {CmCanselDescription}\r\n";
             }
             return temp ;
         }
@@ -70,6 +75,7 @@ namespace OtusHomeWork2026.TelegramBot
                 temp += $"{CmCompleteTask}\r\n";
                 temp += $"{CmReport}\r\n";
                 temp += $"{CmFind}\r\n";
+                temp += $"{CmCansel}\r\n";
             }
             return temp;
         }
@@ -98,6 +104,28 @@ namespace OtusHomeWork2026.TelegramBot
             if(userName != null)
                 text = $"{userName.TelegramUserName},\r\n{text}";
             return text;
+        }
+
+        static internal ReplyKeyboardMarkup CreateReplyKeyboardMarkup(ToDoUser? userData)
+        {
+            var replyKeyboardMarkup = new ReplyKeyboardMarkup();
+            if (userData != null)
+            {
+                replyKeyboardMarkup.AddNewRow(
+                    [Const.CmAddTask]
+                );
+                replyKeyboardMarkup.AddNewRow(
+                    [Const.CmShowTasks, Const.CmShowAllTasks, Const.CmReport]
+                );
+            }
+            else
+            {
+                replyKeyboardMarkup.AddNewRow(
+                    [Const.CmStart]
+                );
+            }
+            replyKeyboardMarkup.ResizeKeyboard = true;
+            return replyKeyboardMarkup;
         }
     }
 }

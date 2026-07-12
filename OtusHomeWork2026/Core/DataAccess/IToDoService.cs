@@ -5,7 +5,6 @@ namespace OtusHomeWork2026.Core.DataAccess
     public interface IToDoService
     {
         Task<IReadOnlyList<ToDoItem>> GetAllByUserIdAsync(Guid userId, CancellationToken ct);
-        //Возвращает ToDoItem для UserId со статусом Active
         Task<IReadOnlyList<ToDoItem>> GetActiveByUserIdAsync(Guid userId, CancellationToken ct);
         Task<ToDoItem> AddAsync(ToDoUser user, string name, CancellationToken ct);
         Task MarkCompletedAsync(Guid id, CancellationToken ct);

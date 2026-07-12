@@ -5,6 +5,9 @@ using OtusHomeWork2026.Core.Exceptions;
 using OtusHomeWork2026.Core.Services;
 using OtusHomeWork2026.Infrastructure.DataAccess;
 using OtusHomeWork2026.Infrastructure.DataAccessFiles;
+using OtusHomeWork2026.TelegramBot.Scenarios;
+using OtusHomeWork2026.TelegramBot.ScenariosTasks;
+using System.Collections;
 using Telegram.Bot;
 using Telegram.Bot.Polling;
 using Telegram.Bot.Types;
@@ -28,8 +31,17 @@ namespace OtusHomeWork2026.TelegramBot
         private ToDoUser? userData;
         ReplyKeyboardMarkup _replyKeyboardMarkup;
 
+        IEnumerable<IScenario> _scenarios;
+        IScenarioContextRepository _contextRepository;
+        ITelegramBotClient _telegramBotClient;
 
-        public UpdateHandler(string toDoUserFolderName, string toDoItemFolderName, string fileIndex)
+        public UpdateHandler(string toDoUserFolderName,
+                             string toDoItemFolderName,
+                             string fileIndex,
+                             IEnumerable<IScenario> scenarios,
+                             IScenarioContextRepository contextRepository,
+                             ITelegramBotClient telegramBotClient
+        )
         {
             _toDoRepositoryIndex = new FileToDoRepositoryIndex(fileIndex);
             _toDoRepositoryIndex.Init(toDoItemFolderName);
@@ -38,25 +50,34 @@ namespace OtusHomeWork2026.TelegramBot
             _toDoService = new ToDoService(_toDoRepository);
             _toDoReportService = new ToDoReportService(_toDoRepository);
             _replyKeyboardMarkup = new ReplyKeyboardMarkup();
+            _scenarios = scenarios;
+            _contextRepository = contextRepository;
+            _telegramBotClient = telegramBotClient;
+
         }
 
         public async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
-        {            
+        {
             userData = await _userService.GetUserAsync(update.Message.From.Id, cancellationToken);
 
             var text = update.Message.Text;
             var chat = update.Message.Chat;
 
-            if (text.StartsWith("/"))
-                await GetUserCommandsAndAArgumentsAsync(text, cancellationToken);
-            else
-                _arguments = text;
+
             if (null == userData)
                 _checkName = false;
             else
                 _checkName = true;
 
-            _replyKeyboardMarkup = createReplyKeyboardMarkup(userData);
+            var scenarioContext = await _contextRepository.GetContext(update.Message.From.Id, cancellationToken);
+            if (scenarioContext != null)
+            {
+                await ProcessScenario(scenarioContext, update.Message, cancellationToken);
+                return;
+            }
+            await GetUserCommandsAndAArgumentsAsync(text, cancellationToken);
+            _replyKeyboardMarkup = Const.CreateReplyKeyboardMarkup(userData);
+
             try
             {
                 switch (_command)
@@ -68,29 +89,12 @@ namespace OtusHomeWork2026.TelegramBot
                                                                             update.Message.From.Username,
                                                                             cancellationToken
                                                                             );
-                            _replyKeyboardMarkup = createReplyKeyboardMarkup(userData);
+                            _replyKeyboardMarkup = Const.CreateReplyKeyboardMarkup(userData);
                             await botClient.SendMessage(chat,
                                                         Const.ReplaceText("Доступны новые команды", userData),
                                                         replyMarkup: _replyKeyboardMarkup,
                                                         cancellationToken: cancellationToken);
                         }
-                        
-                        //if (maxLengthList == 0)
-                        //{
-                        //    await botClient.SendMessage(chat,
-                        //                                Const.ReplaceText("Введите максимально допустимое количество задач:", userData),
-                        //                                cancellationToken: cancellationToken);
-                        //    maxLengthList = Const.ParseAndValidateInt(Console.ReadLine(), 1, 100);
-                        //}
-
-                        //if (taskLengthLimittaskLength == 0)
-                        //{
-                        //    await botClient.SendMessage(chat,
-                        //                                Const.ReplaceText("Введите максимально допустимую длину задачи:", userData),
-                        //                                cancellationToken: cancellationToken);
-                        //    taskLengthLimittaskLength = Const.ParseAndValidateInt(Console.ReadLine(), 1, 100);
-                        //}
-                        
                         break;
 
                     case Const.CmInfo:
@@ -102,7 +106,7 @@ namespace OtusHomeWork2026.TelegramBot
 
                     case Const.CmHelp:
                         await botClient.SendMessage(
-                            chat, 
+                            chat,
                             Const.ReplaceText(Const.PrintHelp(_checkName), userData),
                             replyMarkup: _replyKeyboardMarkup,
                             cancellationToken: cancellationToken
@@ -111,7 +115,7 @@ namespace OtusHomeWork2026.TelegramBot
 
                     case Const.CmExit:
                         userData = null;
-                        _replyKeyboardMarkup = createReplyKeyboardMarkup(userData);
+                        _replyKeyboardMarkup = Const.CreateReplyKeyboardMarkup(userData);
                         await botClient.SendMessage(chat,
                                                     "Работа с ботом завершена.",
                                                     replyMarkup: _replyKeyboardMarkup,
@@ -121,21 +125,11 @@ namespace OtusHomeWork2026.TelegramBot
                     case Const.CmAddTask:
                         if (!(await CheckAnonimusAsync(userData, botClient, update, cancellationToken)))
                             break;
-                        var temp = await _toDoService.GetAllByUserIdAsync(userData.UserId, cancellationToken);
-                        if (temp.Count == maxLengthList)
-                            throw new CustomException("Список заполнен");
-                        if (string.IsNullOrWhiteSpace(_arguments))
-                        {
-                            await botClient.SendMessage(chat,
-                                                    "Введите задачу",
-                                                    replyMarkup: _replyKeyboardMarkup,
-                                                    cancellationToken: cancellationToken);
-                            break;
-                        }
-                        if (_arguments.Length > taskLengthLimittaskLength)
-                            throw new CustomException($"Длина превышает разрешенную в {taskLengthLimittaskLength} символов");
-                        if (!string.IsNullOrEmpty(_arguments))
-                            await _toDoService.AddAsync(userData, _arguments, cancellationToken);
+
+                        var userScenarioContext = new ScenarioContext(ScenarioType.Add);
+                        var taskScenario = new AddTaskScenario(_toDoService, _userService);
+                        _scenarios = _scenarios.Append(taskScenario).ToList();
+                        await ProcessScenario(userScenarioContext, update.Message, cancellationToken);
                         break;
 
                     case Const.CmShowTasks:
@@ -214,7 +208,7 @@ namespace OtusHomeWork2026.TelegramBot
                     case Const.CmCompleteTask:
                         if (!await CheckAnonimusAsync(userData, botClient, update, cancellationToken))
                             break;
-                        if(string.IsNullOrWhiteSpace(_arguments))
+                        if (string.IsNullOrWhiteSpace(_arguments))
                         {
                             await botClient.SendMessage(chat,
                                                     "Введите Guid задачи",
@@ -232,8 +226,8 @@ namespace OtusHomeWork2026.TelegramBot
                                     retStringCT = "Список пуст";
                                 else
                                 {
-                                        await _toDoService.MarkCompletedAsync(result, cancellationToken);
-                                        retStringCT = "Задача помечена как выполненая";                                  
+                                    await _toDoService.MarkCompletedAsync(result, cancellationToken);
+                                    retStringCT = "Задача помечена как выполненая";
                                 }
                             }
                             else
@@ -243,7 +237,7 @@ namespace OtusHomeWork2026.TelegramBot
                                                         replyMarkup: _replyKeyboardMarkup,
                                                         cancellationToken: cancellationToken);
                             break;
-                        }                        
+                        }
 
                     case Const.CmReport:
                         if (!await CheckAnonimusAsync(userData, botClient, update, cancellationToken))
@@ -292,24 +286,7 @@ namespace OtusHomeWork2026.TelegramBot
             }
         }
 
-        private ReplyKeyboardMarkup createReplyKeyboardMarkup(ToDoUser? userData)
-        {
-            var replyKeyboardMarkup = new ReplyKeyboardMarkup();
-            if (userData != null)
-            {
-                replyKeyboardMarkup.AddNewRow(
-                    [Const.CmShowTasks, Const.CmShowAllTasks, Const.CmReport]
-                );
-            }
-            else
-            {
-                replyKeyboardMarkup.AddNewRow(
-                    [Const.CmStart]
-                );
-            }
-            replyKeyboardMarkup.ResizeKeyboard = true;
-            return replyKeyboardMarkup;
-        }
+
 
         internal async Task<bool> CheckAnonimusAsync(ToDoUser user, ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
         {
@@ -321,6 +298,25 @@ namespace OtusHomeWork2026.TelegramBot
                 return false;
             }
             return true;
+        }
+        IScenario GetScenario(ScenarioType scenarioType)
+        {
+            var scenarios = _scenarios.Where(x => x.CanHandle(scenarioType));
+            if (scenarios.Any())
+                return scenarios.First();
+            else
+                throw new NullReferenceException($"Тип сессии/сценария {scenarioType} не найден.");
+        }
+
+        async Task ProcessScenario(ScenarioContext context, Message msg, CancellationToken ct)
+        {
+            var scenario = GetScenario(context.currentScenario);
+            if (await scenario.HandleMessageAsync(_telegramBotClient, context, msg, ct) == ScenarioResult.Completed)
+            {
+                _contextRepository.ResetContext(msg.Chat.Id, ct);
+            }
+            else
+                await _contextRepository.SetContext(msg.From.Id, context, ct);
         }
 
         public async Task HandleErrorAsync(ITelegramBotClient botClient, Exception exception, HandleErrorSource source, CancellationToken cancellationToken)
