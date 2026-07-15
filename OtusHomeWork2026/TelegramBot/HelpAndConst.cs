@@ -112,20 +112,22 @@ namespace OtusHomeWork2026.TelegramBot
             if (userData != null)
             {
                 replyKeyboardMarkup.AddNewRow(
-                    [Const.CmAddTask]
+                    [CmAddTask]
                 );
                 replyKeyboardMarkup.AddNewRow(
-                    [Const.CmShowTasks, Const.CmReport]
+                    [CmShowTasks, CmReport]
                 );
             }
             else
             {
                 replyKeyboardMarkup.AddNewRow(
-                    [Const.CmStart]
+                    [CmStart]
                 );
             }
             replyKeyboardMarkup.ResizeKeyboard = true;
             return replyKeyboardMarkup;
         }
+
+        static internal ReplyKeyboardMarkup CreateCanselKeyboard() => new ReplyKeyboardMarkup(new KeyboardButton(CmCansel)) { ResizeKeyboard = true };
     }
 }

@@ -94,9 +94,14 @@ namespace OtusHomeWork2026.Infrastructure.DataAccessFiles
             {
                 using (StreamReader sr = new StreamReader(_toDoListFileName))
                 {
+                    JsonSerializerOptions options = new JsonSerializerOptions();
+                    options.IncludeFields = true;
                     foreach (var listString in sr.ReadToEnd().Split("\r\n"))
                         if (!string.IsNullOrEmpty(listString))
-                            lists.Add(JsonSerializer.Deserialize<ToDoList>(listString));
+                        {
+                            var list = JsonSerializer.Deserialize<ToDoList>(listString, options);
+                            lists.Add(list);
+                        }
                     return lists;
                 }
             }

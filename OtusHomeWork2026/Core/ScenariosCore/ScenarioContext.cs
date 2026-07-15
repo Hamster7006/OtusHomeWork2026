@@ -9,7 +9,10 @@ namespace OtusHomeWork2026.Core.ScenariosCore
     public enum ScenarioType
     {
         None,
-        Add
+        Add,
+        AddList,
+        DeleteList,
+
     }
     public enum ScenarioResult
     {

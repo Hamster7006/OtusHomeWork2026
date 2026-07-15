@@ -26,7 +26,7 @@ namespace OtusHomeWork2026.Core.Services
             if (name.Length > 10)
                 name = name.Substring(0, 10);
             var newList = new ToDoList(user, name);
-            if (!await _repository.ExistsByName(user.UserId, name, ct))
+            if (await _repository.ExistsByName(user.UserId, name, ct))
             {
                 _repository.Add(newList, ct);
                 return newList;

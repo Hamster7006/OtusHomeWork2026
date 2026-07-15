@@ -11,6 +11,6 @@ namespace OtusHomeWork2026.Core.ScenariosCore
     public interface IScenario
     {
         bool CanHandle(ScenarioType scenario);
-        Task<ScenarioResult> HandleMessageAsync(ITelegramBotClient bot, ScenarioContext context, Message message, CancellationToken ct);
+        Task<ScenarioResult> HandleMessageAsync(ITelegramBotClient bot, ScenarioContext context, Update update, CancellationToken ct);
     }
 }
