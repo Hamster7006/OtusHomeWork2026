@@ -1,7 +1,7 @@
 ﻿using OtusHomeWork2026.Core.DataAccess;
 using OtusHomeWork2026.Core.Entities;
+using OtusHomeWork2026.Core.ScenariosCore;
 using OtusHomeWork2026.Core.Services;
-using OtusHomeWork2026.TelegramBot.Scenarios;
 using System;
 using System.Collections.Generic;
 using System.Globalization;

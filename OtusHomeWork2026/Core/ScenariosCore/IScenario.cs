@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 
-namespace OtusHomeWork2026.TelegramBot.Scenarios
+namespace OtusHomeWork2026.Core.ScenariosCore
 {
     public interface IScenario
     {

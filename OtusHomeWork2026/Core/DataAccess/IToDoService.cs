@@ -11,5 +11,7 @@ namespace OtusHomeWork2026.Core.DataAccess
         Task DeleteAsync(Guid id, CancellationToken ct);
 
         Task<IReadOnlyList<ToDoItem>> FindAsync(ToDoUser user, string namePrefix, CancellationToken ct);
+
+        Task<IReadOnlyList<ToDoItem>> GetByUserIdAndList(Guid userId, Guid? listId, CancellationToken ct);
     }
 }

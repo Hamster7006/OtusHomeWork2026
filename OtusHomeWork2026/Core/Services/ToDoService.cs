@@ -51,5 +51,14 @@ namespace OtusHomeWork2026.Core.Services
             var userTasks = await toDoRepository.GetAllByUserIdAsync(user.UserId, ct);
             return userTasks.Where(x => x.TaskName.StartsWith(namePrefix)).ToList();
         }
+
+        public async Task<IReadOnlyList<ToDoItem>> GetByUserIdAndList(Guid userId, Guid? listId, CancellationToken ct)
+        {
+            var tempToDoItemList = await toDoRepository.GetAllByUserIdAsync(userId, ct);
+            if (listId != null)
+                tempToDoItemList = tempToDoItemList.Where(x => x.List.Id == listId).ToList();
+
+            return tempToDoItemList;
+        }
     }
 }

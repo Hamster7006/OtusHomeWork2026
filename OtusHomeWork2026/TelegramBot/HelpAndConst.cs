@@ -22,10 +22,10 @@ namespace OtusHomeWork2026.TelegramBot
         internal const string CmAddTaskDescription = $"добавлять задачи в список";
         internal const string CmRemoveTask = "/removetask";
         internal const string CmRemoveTaskDescription = $"удалить задачи по номеру в списке";
-        internal const string CmShowTasks = "/showtasks";
+        internal const string CmShowTasks = "/show";
         internal const string CmShowTasksDescription = $"отобразить список aктивных добавленных задач.";
-        internal const string CmShowAllTasks = "/showalltasks";
-        internal const string CmShowAllTasksDescription = $"отобразить список всех добавленных задач.";
+        //internal const string CmShowAllTasks = "/showalltasks";
+        //internal const string CmShowAllTasksDescription = $"отобразить список всех добавленных задач.";
         internal const string CmCompleteTask = "/completetask";
         internal const string CmCompleteTaskDescription = $"(guid задачи) пометить Задачу с guid выполненой.";
         internal const string CmReport = "/report";
@@ -49,7 +49,7 @@ namespace OtusHomeWork2026.TelegramBot
                 temp += $"{CmAddTask} <string> - {CmAddTaskDescription}\r\n";
                 temp += $"{CmRemoveTask} <Guid> - {CmRemoveTaskDescription}\r\n";
                 temp += $"{CmShowTasks} - {CmShowTasksDescription}\r\n";
-                temp += $"{CmShowAllTasks} - {CmShowAllTasksDescription}\r\n";
+                //temp += $"{CmShowAllTasks} - {CmShowAllTasksDescription}\r\n";
                 temp += $"{CmCompleteTask} <Guid> - {CmCompleteTaskDescription}\r\n";
                 temp += $"{CmReport} - {CmReportDescription}\r\n";
                 temp += $"{CmFind} - {CmFindDescription}\r\n";
@@ -71,7 +71,7 @@ namespace OtusHomeWork2026.TelegramBot
                 temp += $"{CmAddTask}\r\n";
                 temp += $"{CmRemoveTask}\r\n";
                 temp += $"{CmShowTasks}\r\n";
-                temp += $"{CmShowAllTasks}\r\n";
+                //temp += $"{CmShowAllTasks}\r\n";
                 temp += $"{CmCompleteTask}\r\n";
                 temp += $"{CmReport}\r\n";
                 temp += $"{CmFind}\r\n";
@@ -115,7 +115,7 @@ namespace OtusHomeWork2026.TelegramBot
                     [Const.CmAddTask]
                 );
                 replyKeyboardMarkup.AddNewRow(
-                    [Const.CmShowTasks, Const.CmShowAllTasks, Const.CmReport]
+                    [Const.CmShowTasks, Const.CmReport]
                 );
             }
             else

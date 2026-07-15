@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace OtusHomeWork2026.TelegramBot.Scenarios
+namespace OtusHomeWork2026.Core.ScenariosCore
 {
     internal class InMemoryScenarioContextRepository : IScenarioContextRepository
     {
