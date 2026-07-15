@@ -6,7 +6,6 @@ namespace OtusHomeWork2026.Infrastructure.DataAccessFiles
 {
     internal class FileUserRepository : IUserRepository
     {
-        //List<ToDoUser> _toDoUsers = new List<ToDoUser>();
         string toDoUserFileName = string.Empty;
         public FileUserRepository(string toDoUserFileName)
         {
@@ -17,7 +16,7 @@ namespace OtusHomeWork2026.Infrastructure.DataAccessFiles
         {
             if(!File.Exists(toDoUserFileName))
                 File.Create(toDoUserFileName).Dispose();
-            using (StreamWriter sw = new StreamWriter(toDoUserFileName))
+            using (StreamWriter sw = new StreamWriter(toDoUserFileName, true))
             {
                 sw.WriteLine(JsonSerializer.Serialize(user));
             }
