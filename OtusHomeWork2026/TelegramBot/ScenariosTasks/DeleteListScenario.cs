@@ -33,33 +33,14 @@ namespace OtusHomeWork2026.TelegramBot.ScenariosTasks
         {
             var scenarioResult = ScenarioResult.Transition;
             var callbackQuery = update.CallbackQuery;
-            var toDoUser = await _userService.GetUserAsync(callbackQuery.From.Id, ct);
-
-            //ReplyKeyboardMarkup _replyKeyboard = Const.CreateCanselKeyboard();
-            //ReplyKeyboardMarkup _replyKeyboardDefault = Const.CreateReplyKeyboardMarkup(toDoUser);
-            //var toDoListCallbackDto = ToDoListCallbackDto.FromString(callbackQuery.Data);
-            //var tasks = await _toDoService.GetByUserIdAndList(toDoUser.UserId, null, ct);
+            var toDoUser = await _userService.GetUserAsync(UpdateHandler.GetUserIdFromUpdate(update), ct);
             var toDoListCallbackDto = ToDoListCallbackDto.FromString(callbackQuery.Data);
-            Guid targetList;
             if (toDoListCallbackDto.Action != null)
-                switch (toDoListCallbackDto.Action.Split("|")[0])
-                {
-                    case "Target":
-                        targetList = Guid.Parse(toDoListCallbackDto.Action.Split("|")[1]);
-                        break;
-                    case "Yes":
-                        break;
-                    case "No":
-                        break;
-                    default:
-                        break;
-                }
-
                 switch (context.CurrentStep)
                 {
                     case null:
                         context.Data.Add(toDoUser.TelegramUserId.ToString(), toDoUser);
-                    
+
                         var lists = await _toDoListService.GetUserLists(toDoUser.UserId, ct);
                         if (lists != null)
                         {
@@ -68,7 +49,7 @@ namespace OtusHomeWork2026.TelegramBot.ScenariosTasks
                                 keyboardLists.AddNewRow(
                                     new[]
                                     {
-                                        InlineKeyboardButton.WithCallbackData(text: list.Name, callbackData: $"Target|{list.Id}"),
+                                        InlineKeyboardButton.WithCallbackData(text: list.Name, callbackData: $"deletelist|{list.Id}"),
                                     });
                             _message = await bot.SendMessage(callbackQuery.Message.Chat,
                                                     "Выберите список для удаления",
@@ -79,21 +60,50 @@ namespace OtusHomeWork2026.TelegramBot.ScenariosTasks
                             await bot.SendMessage(callbackQuery.Message.Chat,
                                                     "Список листов пуст",
                                                     cancellationToken: ct);
+                        context.CurrentStep = "Approve";
+                        break;
+                    case "Approve":
+                        _toDoList = await _toDoListService.Get(Guid.Parse($"{toDoListCallbackDto.ToDoListId}"), ct);
+                        InlineKeyboardMarkup keyboardApprove = new InlineKeyboardMarkup();
+                        keyboardApprove.AddNewRow(
+                                    new[]
+                                    {
+                                        InlineKeyboardButton.WithCallbackData("✅Да", "yes"),
+                                        InlineKeyboardButton.WithCallbackData("❌Нет", "no")
+                                    });
+                        
+                        await bot.EditMessageText(callbackQuery.Message.Chat,
+                                                    _message.Id,
+                                                    $"Подтвердите удаление списка {_toDoList.Name} и всех задач в этом списке",
+                                                    replyMarkup: keyboardApprove,
+                                                    cancellationToken: ct);
+                        context.CurrentStep = "Delete";
+                        break;
+                    case "Delete":
+                        var replyMarkup = Const.CreateReplyKeyboardMarkup(await _userService.GetUserAsync(UpdateHandler.GetUserIdFromUpdate(update), ct));
+                        if (toDoListCallbackDto.Action == "no")
+                        {
+                            await bot.DeleteMessage(callbackQuery.Message.Chat, _message.Id, ct);
+                            await bot.SendMessage(callbackQuery.Message.Chat, "Удаление списка отменено", replyMarkup: replyMarkup);
+                        }
+                        else
+                        {
+                            var retItems = await _toDoService.GetByUserIdAndList(toDoUser.UserId, _toDoList.Id, ct);
+                            if (retItems.Count() > 0)
+                            {
+                                foreach (var item in retItems)
+                                    _toDoService.DeleteAsync(item.GuidId,ct);
+                            }
+                            _toDoListService.Delete(_toDoList.Id, ct);
 
-
-
-
-
-
-                    //    _message = await bot.SendMessage(message.Chat,
-                    //                                 "Вы уверены что хотите удалить список и все задачи в данном списке?",
-                    //                                 ,
-                    //                                 cancellationToken: ct);
-                    //context.CurrentStep = "Approve";
-                    break;
-                case "Approve": 
-                    break;
-                case "Cancel":
+                            await bot.DeleteMessage(callbackQuery.Message.Chat, _message.Id, ct);
+                            await bot.SendMessage(callbackQuery.Message.Chat,
+                                                    $"Список {_toDoList.Name} и задачи в списке увдалены",
+                                                     replyMarkup: replyMarkup,
+                                                    cancellationToken: ct);
+                        }
+                        scenarioResult = ScenarioResult.Completed;
+                        context.CurrentStep = "Сценарий завершен.";
                     break;
                 default:
                     break;

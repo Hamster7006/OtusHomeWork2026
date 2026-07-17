@@ -8,16 +8,16 @@ namespace OtusHomeWork2026.Core.Entities
 {
     public class ToDoList
     {
-        public Guid Id {  get; }
-        public string Name { get; }
-        public ToDoUser User { get; }
-        public DateTime CreatedAt {  get; }
+        public Guid Id {  get; set; }
+        public string Name { get; set; }
+        public ToDoUser User { get; set; }
+        public DateTime CreatedAt {  get; set; }
 
-        public ToDoList(ToDoUser toDoUser, string name)
+        public ToDoList(ToDoUser user, string name)
         {
             Id = Guid.NewGuid();
             CreatedAt = DateTime.Now;
-            User = toDoUser;
+            User = user;
             Name = name;
         }
     }

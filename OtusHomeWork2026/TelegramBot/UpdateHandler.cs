@@ -77,10 +77,10 @@ namespace OtusHomeWork2026.TelegramBot
 
         public async Task OnMessage(Update update, Message message, CancellationToken cancellationToken)
         {
-            userData = await _userService.GetUserAsync(update.Message.From.Id, cancellationToken);
+            userData = await _userService.GetUserAsync(GetUserIdFromUpdate(update), cancellationToken);
 
-            var text = update.Message.Text;
-            var chat = update.Message.Chat;
+            var text = GetMessageFromUpdate(update);
+            var chat = GetChatFromUpdate(update);
 
 
             if (null == userData)
@@ -88,7 +88,7 @@ namespace OtusHomeWork2026.TelegramBot
             else
                 _checkName = true;
 
-            var scenarioContext = await _contextRepository.GetContext(update.Message.From.Id, cancellationToken);
+            var scenarioContext = await _contextRepository.GetContext(GetUserIdFromUpdate(update), cancellationToken);
             if (scenarioContext != null)
             {
                 await ProcessScenario(scenarioContext, update, cancellationToken);
@@ -146,7 +146,7 @@ namespace OtusHomeWork2026.TelegramBot
                             break;
 
                         var userScenarioContext = new ScenarioContext(ScenarioType.Add);
-                        var taskScenario = new AddTaskScenario(_toDoService, _userService);
+                        var taskScenario = new AddTaskScenario(_toDoService, _userService, _toDoListService);
                         _scenarios = _scenarios.Append(taskScenario).ToList();
                         await ProcessScenario(userScenarioContext, update, cancellationToken);
                         break;
@@ -179,25 +179,12 @@ namespace OtusHomeWork2026.TelegramBot
                                 InlineKeyboardButton.WithCallbackData(text: "❌ Удалить", callbackData: "deletelist"),
                             });
 
-                        // Отправляем сообщение с прикрепленной клавиатурой.
-                        Message mes1 = await _telegramBotClient.SendMessage(
+                        await _telegramBotClient.SendMessage(
                             chat,
                             text: "Выберите список",
                             replyMarkup: inlineKeyboard,
                             cancellationToken: cancellationToken
                         );
-                        lastSentMessageId = mes1.Id;
-                        //var retItems = await _toDoService.GetActiveByUserIdAsync(userData.UserId, cancellationToken);
-                        //var retString = "";
-                        //if (retItems.Count == 0)
-                        //    retString = "Список пуст";
-                        //else
-                        //    foreach (var item in retItems)
-                        //        retString += $"{item.CreateAT}  {item.TaskName} ` {item.GuidId}` \r\n";
-                        //await _telegramBotClient.SendMessage(chat,
-                        //                            Const.ReplaceText($"{retString}", userData),
-                        //                            replyMarkup: _replyKeyboardMarkup,
-                        //                            cancellationToken: cancellationToken);
                         break;
 
                     case Const.CmRemoveTask:
@@ -240,22 +227,6 @@ namespace OtusHomeWork2026.TelegramBot
                                                     replyMarkup: _replyKeyboardMarkup,
                                                     cancellationToken: cancellationToken);
                         break;
-
-                    //case Const.CmShowAllTasks:
-                    //    if (!await CheckAnonimusAsync(userData, botClient, update, cancellationToken))
-                    //        break;
-                    //    var retItemsALL = await _toDoService.GetAllByUserIdAsync(userData.UserId, cancellationToken);
-                    //    var retStringALL = "";
-                    //    if (retItemsALL.Count == 0)
-                    //        retStringALL = "Список пуст";
-                    //    else
-                    //        foreach (var item in retItemsALL)
-                    //            retStringALL += $"{item.CreateAT} {item.State} {item.TaskName} `{item.GuidId}` \r\n";
-                    //    await botClient.SendMessage(chat,
-                    //                                Const.ReplaceText($"{retStringALL}", userData),
-                    //                                replyMarkup: _replyKeyboardMarkup,
-                    //                                cancellationToken: cancellationToken);
-                    //    break;
 
                     case Const.CmCompleteTask:
                         if (!await CheckAnonimusAsync(userData, _telegramBotClient, update, cancellationToken))
@@ -339,12 +310,10 @@ namespace OtusHomeWork2026.TelegramBot
         }
         public async Task OnCallbackQuery(Update update,CallbackQuery callbackQuery, CancellationToken ct)
         {
-            //callbackQuery.Data
-            var userTgId = callbackQuery.From.Id;
-            var toDoUser = await _userService.GetUserAsync(userTgId, ct);
+            var toDoUser = await _userService.GetUserAsync(GetUserIdFromUpdate(update), ct);
             if (toDoUser == null)
                 return;
-            var contextRepository = await _contextRepository.GetContext(userTgId, ct);
+            var contextRepository = await _contextRepository.GetContext(GetUserIdFromUpdate(update), ct);
             if (contextRepository != null)
             {
                 await ProcessScenario(contextRepository, update, ct);
@@ -358,70 +327,31 @@ namespace OtusHomeWork2026.TelegramBot
             switch (toDoListCallbackDto.Action)
             {
                 case "show":
-                    var retItems = toDoListCallbackDto.ToDoListId != null
-                        ? tasks.Where(x => x.List.Id == toDoListCallbackDto.ToDoListId && x.State == ToDoItemState.Active).ToList()
-                        : tasks.Where(x => x.List == null && x.State == ToDoItemState.Active).ToList();
+                    var retItems = await _toDoService.GetByUserIdAndList(toDoUser.UserId, toDoListCallbackDto.ToDoListId, ct);
                     var retString = "";
-                    if (retItems.Count == 0)
-                        retString = "Список пуст";
+                    if (retItems == null || retItems.Count == 0)
+                        retString = "Список задач пуст";
                     else
                         foreach (var item in retItems)
                             retString += $"{item.CreateAT} {item.State} {item.TaskName} `{item.GuidId}` \r\n";
-                    await _telegramBotClient.EditMessageText(callbackQuery.Message.Chat,
+                    if (lastSentMessageId != 0)
+                        await _telegramBotClient.EditMessageText(GetChatFromUpdate(update),
                                                         lastSentMessageId,
                                                         Const.ReplaceText($"{retString}", userData),
                                                         cancellationToken: ct);
+                    else
+                        await _telegramBotClient.SendMessage(GetChatFromUpdate(update),
+                                                        Const.ReplaceText($"{retString}", userData),
+                                                        cancellationToken: ct);
                     break;
-                //case "show_completed":
-                //    await ShowTasks(botClient, callbackQuery, false, ct);
-                //    break;
-                //case "showtask":
-                //    InlineKeyboardMarkup inlineKeyboardCompliteDeleteTasks = new InlineKeyboardMarkup();
-                //    var completeCallbackDto = ToDoListCallbackDto.FromString($"completetask|{toDoListCallbackDto.ToDoListId}");
-                //    var deleteCallbackDto = ToDoListCallbackDto.FromString($"deletetask|{toDoListCallbackDto.ToDoListId}");
-                //    inlineKeyboardCompliteDeleteTasks.AddNewRow(
-                //            new[]
-                //            {
-                //                    InlineKeyboardButton.WithCallbackData(text: "✅Выполнить", callbackData: completeCallbackDto.ToString()),
-                //                    InlineKeyboardButton.WithCallbackData(text: "❌Удалить", callbackData: deleteCallbackDto.ToString()),
-                //            });
-
-                //    var taskSelected = await _toDoRepository.Get((Guid)toDoListCallbackDto.ToDoListId, ct);
-                //    await botClient.SendMessage(chat, $"Задача {taskSelected?.Name}:", replyMarkup: inlineKeyboardCompliteDeleteTasks, cancellationToken: ct);
-                //    break;
-                //case "showcompletedtaskinfo":
-                //    var completedTaskSelected = await _toDoRepository.Get((Guid)toDoListCallbackDto.ToDoListId, ct);
-                //    await botClient.SendMessage(
-                //        chat,
-                //        $"Задача {completedTaskSelected?.Name}:\nСрок выполнения: {completedTaskSelected?.Deadline}\nВремя создания: {completedTaskSelected?.CreatedAt}\nВремя выполнения: {completedTaskSelected?.StateChangedAt}",
-                //        replyMarkup: _replyKeyboard,
-                //        cancellationToken: ct);
-                //    break;
-                //case "completetask":
-                //    var taskForComplete = await _toDoRepository.Get((Guid)toDoListCallbackDto.ToDoListId, ct);
-                //    await _toDoRepository.Update(taskForComplete, ct);
-                //    await botClient.SendMessage(
-                //        chat,
-                //        $"Задача {taskForComplete?.Name}:\nСрок выполнения: {taskForComplete?.Deadline}\nВремя создания: {taskForComplete?.CreatedAt}\nЗадача выполнена.",
-                //        replyMarkup: _replyKeyboard,
-                //        cancellationToken: ct);
-                //    break;
-                //case "deletetask":
-                //    var deleteTaskScenarioContext = new ScenarioContext(ScenarioType.DeleteList);
-                //    var deleteTaskScenario = new DeleteTaskScenario(_toDoService);
-                //    _scenarios = _scenarios.Append(deleteTaskScenario).ToList();
-                //    await ProcessScenario(deleteTaskScenarioContext, update, ct);
-                //    break;
                 case "addlist":
                     var newScenarioContext = new ScenarioContext(ScenarioType.AddList);
-                    //newScenarioContext. = toDoUser.TelegramUserId;
                     var addListScenario = new AddListScenario(_userService, _toDoListService);
                     _scenarios = _scenarios.Append(addListScenario).ToList();
                     await ProcessScenario(newScenarioContext, update, ct);
                     break;
                 case "deletelist":
                     var deleteListScenarioContext = new ScenarioContext(ScenarioType.DeleteList);
-                    //deleteListScenarioContext.UserId = toDoUser.TelegramUserId;
                     var deleteListScenario = new DeleteListScenario(_userService, _toDoListService, _toDoService);
                     _scenarios = _scenarios.Append(deleteListScenario).ToList();
                     await ProcessScenario(deleteListScenarioContext, update, ct);
@@ -452,18 +382,19 @@ namespace OtusHomeWork2026.TelegramBot
             if (scenarios.Any())
                 return scenarios.First();
             else
-                throw new NullReferenceException($"Тип сессии/сценария {scenarioType} не найден.");
+                throw new NullReferenceException($"Тип сценария {scenarioType} не найден.");
         }
 
         async Task ProcessScenario(ScenarioContext context, Update update, CancellationToken ct)
         {
+            
             var scenario = GetScenario(context.currentScenario);
             if (await scenario.HandleMessageAsync(_telegramBotClient, context, update, ct) == ScenarioResult.Completed)
             {
-                _contextRepository.ResetContext(update.Message.Chat.Id, ct);
+                _contextRepository.ResetContext(GetUserIdFromUpdate(update), ct);
             }
             else
-                await _contextRepository.SetContext(update.CallbackQuery.From.Id, context, ct);
+                _contextRepository.SetContext(GetUserIdFromUpdate(update), context, ct);
         }
 
         public async Task HandleErrorAsync(ITelegramBotClient botClient, Exception exception, HandleErrorSource source, CancellationToken cancellationToken)
@@ -482,6 +413,47 @@ namespace OtusHomeWork2026.TelegramBot
                     for (int i = 1; i < arr.Length; i++)
                         _arguments = string.Join(" ", _arguments, arr[i].Trim()).Trim();
             }
+        }
+
+        internal static Chat GetChatFromUpdate(Update update)
+        {
+            if (update.Message != null)
+                return update.Message.Chat;
+
+            if (update.CallbackQuery != null)
+                return update.CallbackQuery.Message.Chat;
+
+            if (update.EditedMessage != null)
+                return update.EditedMessage.Chat;
+
+            throw new InvalidOperationException("Не удалось определить чат из update");
+        }
+
+        internal static string GetMessageFromUpdate(Update update)
+        {
+            if (update.Message != null)
+                return update.Message.Text;
+
+            if (update.CallbackQuery != null)
+                return update.CallbackQuery.Message.Text;
+
+            if (update.EditedMessage != null)
+                return update.EditedMessage.Text;
+
+            throw new InvalidOperationException("Не удалось получить сообщение из update");
+        }
+        internal static long GetUserIdFromUpdate(Update update)
+        {
+            if (update.Message != null)
+                return update.Message.From.Id;
+
+            if (update.CallbackQuery != null)
+                return update.CallbackQuery.From.Id;
+
+            if (update.EditedMessage != null)
+                return update.EditedMessage.From.Id;
+
+            throw new InvalidOperationException("Не удалось получить Id пользователя из update");
         }
     }
 }

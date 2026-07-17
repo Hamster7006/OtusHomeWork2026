@@ -17,14 +17,7 @@ namespace OtusHomeWork2026.Infrastructure.DataAccessFiles
         {
             _toDoListFileName = toDoListFileName;
         }
-        /// <summary>
-        /// Добавление нового списка в общий массив пользователя
-        /// list - ToDoList 
-        /// ct - CancellationToken
-        /// </summary>
-        /// <param name="list"></param>
-        /// <param name="ct"></param>
-        /// <returns></returns>
+
         public async Task Add(ToDoList list, CancellationToken ct)
         {
             if (!File.Exists(_toDoListFileName))
@@ -52,16 +45,7 @@ namespace OtusHomeWork2026.Infrastructure.DataAccessFiles
                 }
             }
         }
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="userId"></param>
-        /// <param name="name"></param>
-        /// <param name="ct"></param>
-        /// <returns>
-        /// true - есть
-        /// false - нет
-        /// </returns>
+
         public async Task<bool> ExistsByName(Guid userId, string name, CancellationToken ct)
         {
             var lists = LoadFromFile();
@@ -97,10 +81,14 @@ namespace OtusHomeWork2026.Infrastructure.DataAccessFiles
                     JsonSerializerOptions options = new JsonSerializerOptions();
                     options.IncludeFields = true;
                     foreach (var listString in sr.ReadToEnd().Split("\r\n"))
-                        if (!string.IsNullOrEmpty(listString))
+                        if (!string.IsNullOrEmpty(listString) && listString != "[]")
                         {
-                            var list = JsonSerializer.Deserialize<ToDoList>(listString, options);
-                            lists.Add(list);
+                            try
+                            {
+                                var list = JsonSerializer.Deserialize<ToDoList>(json: listString, options: options);
+                                lists.Add(list);
+                            }
+                            catch { }
                         }
                     return lists;
                 }

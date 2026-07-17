@@ -6,7 +6,7 @@ namespace OtusHomeWork2026.Core.DataAccess
     {
         Task<IReadOnlyList<ToDoItem>> GetAllByUserIdAsync(Guid userId, CancellationToken ct);
         Task<IReadOnlyList<ToDoItem>> GetActiveByUserIdAsync(Guid userId, CancellationToken ct);
-        Task<ToDoItem> AddAsync(ToDoUser user, string name, CancellationToken ct);
+        Task<ToDoItem> AddAsync(ToDoUser user, string name, ToDoList toDoList, CancellationToken ct);
         Task MarkCompletedAsync(Guid id, CancellationToken ct);
         Task DeleteAsync(Guid id, CancellationToken ct);
 

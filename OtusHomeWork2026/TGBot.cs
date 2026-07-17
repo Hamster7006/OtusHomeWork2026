@@ -86,8 +86,8 @@ namespace OtusHomeWork2026
                         //UpdateType.MyChatMember,
                         //UpdateType.ChatMember,
                         //UpdateType.ChatJoinRequest,
-                        UpdateType.MessageReaction, // реакция на соообщение
-                        UpdateType.MessageReactionCount, // Счетчик реакций на сообщение
+                        //UpdateType.MessageReaction, // реакция на соообщение
+                        //UpdateType.MessageReactionCount, // Счетчик реакций на сообщение
                         //UpdateType.ChatBoost, // буст канала
                         //UpdateType.RemovedChatBoost, // Отключение буста
                         //UpdateType.BusinessConnection,//??
@@ -116,7 +116,6 @@ namespace OtusHomeWork2026
                     new BotCommand { Command = $"{Const.CmAddTask.Replace("/","")}", Description = $"{Const.CmAddTaskDescription}" },
                     new BotCommand { Command = $"{Const.CmRemoveTask.Replace("/", "")}", Description = $"{Const.CmRemoveTaskDescription}" },
                     new BotCommand { Command = $"{Const.CmShowTasks.Replace("/", "")}", Description = $"{Const.CmShowTasksDescription}" },
-                    //new BotCommand { Command = $"{Const.CmShowAllTasks.Replace("/", "")}", Description = $"{Const.CmShowAllTasksDescription}" },
                     new BotCommand { Command = $"{Const.CmReport.Replace("/", "")}", Description = $"{Const.CmReportDescription}" },
                     new BotCommand { Command = $"{Const.CmFind.Replace("/", "")}", Description = $"{Const.CmFindDescription}" },
                     new BotCommand { Command = $"{Const.CmCompleteTask.Replace("/", "")}", Description = $"{Const.CmCompleteTaskDescription}" },

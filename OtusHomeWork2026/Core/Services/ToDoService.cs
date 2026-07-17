@@ -12,13 +12,15 @@ namespace OtusHomeWork2026.Core.Services
         {
             this.toDoRepository = toDoRepository;
         }
-        public async Task<ToDoItem> AddAsync(ToDoUser user, string name, CancellationToken ct)
+        public async Task<ToDoItem> AddAsync(ToDoUser user, string name, ToDoList? toDoList, CancellationToken ct)
         {
-            var tempTodo = new ToDoItem(user, name);
+            
             if (await toDoRepository.ExistsByNameAsync(user.UserId, name, ct))
                 throw new CustomException($"Такая задача уже есть.");
             else
             {
+                var tempTodo = new ToDoItem(user, name);
+                tempTodo.List = toDoList;
                 await toDoRepository.AddAsync(tempTodo, ct);
                 return tempTodo;
             }
@@ -56,9 +58,16 @@ namespace OtusHomeWork2026.Core.Services
         {
             var tempToDoItemList = await toDoRepository.GetAllByUserIdAsync(userId, ct);
             if (listId != null)
-                tempToDoItemList = tempToDoItemList.Where(x => x.List.Id == listId).ToList();
-
-            return tempToDoItemList;
+            {
+                List<ToDoItem> returnData = new List<ToDoItem>();
+                foreach (var tempToDoItem in tempToDoItemList)
+                    if (tempToDoItem.List != null)
+                        if (tempToDoItem.List.Id == listId)
+                            returnData.Add(tempToDoItem);
+                return returnData;
+            }
+            else
+                return tempToDoItemList;
         }
     }
 }
