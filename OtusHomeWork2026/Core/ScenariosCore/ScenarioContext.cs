@@ -4,12 +4,15 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace OtusHomeWork2026.TelegramBot.Scenarios
+namespace OtusHomeWork2026.Core.ScenariosCore
 {
     public enum ScenarioType
     {
         None,
-        Add
+        Add,
+        AddList,
+        DeleteList,
+
     }
     public enum ScenarioResult
     {

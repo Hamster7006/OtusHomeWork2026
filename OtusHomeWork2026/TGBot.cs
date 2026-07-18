@@ -1,7 +1,8 @@
 ﻿using OtusHomeWork2026.Core.Exceptions;
+using OtusHomeWork2026.Core.ScenariosCore;
 using OtusHomeWork2026.TelegramBot;
-using OtusHomeWork2026.TelegramBot.Scenarios;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -13,6 +14,7 @@ using Telegram.Bot;
 using Telegram.Bot.Polling;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
+using Telegram.Bot.Types.Payments;
 using Telegram.Bot.Types.ReplyMarkups;
 
 namespace OtusHomeWork2026
@@ -25,7 +27,8 @@ namespace OtusHomeWork2026
             {
                 toDoUserFileName = "Data\\toDoUsers.json",
                 toDoItemFolderName = "Data\\toDoItems",
-                fileIndex = "Data\\fileIndex.json"
+                fileIndex = "Data\\fileIndex.json",
+                fileListData = "Data\\fileListData.json"
             };
 
             #region Получение токена
@@ -48,14 +51,17 @@ namespace OtusHomeWork2026
 
             #region Проверка существование папок и фалов
 
-            if(Directory.Exists(pathInfo.toDoItemFolderName))
+            if (!Directory.Exists(pathInfo.toDoItemFolderName))
                 Directory.CreateDirectory(pathInfo.toDoItemFolderName);
 
-            if (File.Exists(pathInfo.toDoUserFileName))
+            if (!File.Exists(pathInfo.toDoUserFileName))
                 File.Create(pathInfo.toDoUserFileName).Dispose();
 
-            if (File.Exists(pathInfo.fileIndex))
+            if (!File.Exists(pathInfo.fileIndex))
                 File.Create(pathInfo.fileIndex).Dispose();
+
+            if (!File.Exists(pathInfo.fileListData))
+                File.Create(pathInfo.fileListData).Dispose();
             #endregion
 
             try
@@ -64,12 +70,42 @@ namespace OtusHomeWork2026
                 var botClient = new TelegramBotClient(token);
                 var receiverOptions = new ReceiverOptions
                 {
-                    AllowedUpdates = [UpdateType.Message],
+                    AllowedUpdates = new UpdateType[]
+                    {
+                        UpdateType.Message, //сообщение
+                        //UpdateType.InlineQuery, // Запрос?
+                        //UpdateType.ChosenInlineResult, // Запрос?
+                        UpdateType.CallbackQuery, // клавиатура в сообщении
+                        UpdateType.EditedMessage, // отредактированное сообщение
+                        //UpdateType.ChannelPost, // пост в канале
+                        //UpdateType.EditedChannelPost, // пост в канале отредактированный
+                        //UpdateType.ShippingQuery, //??
+                        //UpdateType.PreCheckoutQuery,//??
+                        //UpdateType.Poll,
+                        //UpdateType.PollAnswer,
+                        //UpdateType.MyChatMember,
+                        //UpdateType.ChatMember,
+                        //UpdateType.ChatJoinRequest,
+                        //UpdateType.MessageReaction, // реакция на соообщение
+                        //UpdateType.MessageReactionCount, // Счетчик реакций на сообщение
+                        //UpdateType.ChatBoost, // буст канала
+                        //UpdateType.RemovedChatBoost, // Отключение буста
+                        //UpdateType.BusinessConnection,//??
+                        //UpdateType.BusinessMessage,//??
+                        //UpdateType.EditedBusinessMessage,//??
+                        //UpdateType.DeletedBusinessMessages,//??
+                        //UpdateType.PurchasedPaidMedia,//??
+                        //UpdateType.ManagedBot,//??
+                        //UpdateType.GuestMessage,//??
+                    }
+
+                    ,
                     DropPendingUpdates = true
                 };
 
                 IEnumerable<IScenario> scenarios = new List<IScenario>();
                 var scenarioContextRepository = new InMemoryScenarioContextRepository();
+
 
                 // Создаем список команд
                 var commands = new List<BotCommand>
@@ -80,7 +116,6 @@ namespace OtusHomeWork2026
                     new BotCommand { Command = $"{Const.CmAddTask.Replace("/","")}", Description = $"{Const.CmAddTaskDescription}" },
                     new BotCommand { Command = $"{Const.CmRemoveTask.Replace("/", "")}", Description = $"{Const.CmRemoveTaskDescription}" },
                     new BotCommand { Command = $"{Const.CmShowTasks.Replace("/", "")}", Description = $"{Const.CmShowTasksDescription}" },
-                    new BotCommand { Command = $"{Const.CmShowAllTasks.Replace("/", "")}", Description = $"{Const.CmShowAllTasksDescription}" },
                     new BotCommand { Command = $"{Const.CmReport.Replace("/", "")}", Description = $"{Const.CmReportDescription}" },
                     new BotCommand { Command = $"{Const.CmFind.Replace("/", "")}", Description = $"{Const.CmFindDescription}" },
                     new BotCommand { Command = $"{Const.CmCompleteTask.Replace("/", "")}", Description = $"{Const.CmCompleteTaskDescription}" },
@@ -92,6 +127,7 @@ namespace OtusHomeWork2026
                 var handler = new UpdateHandler(pathInfo.toDoUserFileName,
                                                 pathInfo.toDoItemFolderName,
                                                 pathInfo.fileIndex,
+                                                pathInfo.fileListData,
                                                 scenarios,
                                                 scenarioContextRepository,
                                                 botClient
