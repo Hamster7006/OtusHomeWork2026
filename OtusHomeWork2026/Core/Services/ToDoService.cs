@@ -69,5 +69,10 @@ namespace OtusHomeWork2026.Core.Services
             else
                 return tempToDoItemList;
         }
+
+        public Task<ToDoItem?> Get(Guid toDoItemId, CancellationToken ct)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

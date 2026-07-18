@@ -9,7 +9,7 @@ namespace OtusHomeWork2026.Core.DataAccess
         Task<ToDoItem> AddAsync(ToDoUser user, string name, ToDoList toDoList, CancellationToken ct);
         Task MarkCompletedAsync(Guid id, CancellationToken ct);
         Task DeleteAsync(Guid id, CancellationToken ct);
-
+        Task<ToDoItem?> Get(Guid toDoItemId, CancellationToken ct);
         Task<IReadOnlyList<ToDoItem>> FindAsync(ToDoUser user, string namePrefix, CancellationToken ct);
 
         Task<IReadOnlyList<ToDoItem>> GetByUserIdAndList(Guid userId, Guid? listId, CancellationToken ct);
