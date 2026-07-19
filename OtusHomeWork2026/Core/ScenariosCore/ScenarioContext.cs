@@ -12,7 +12,7 @@ namespace OtusHomeWork2026.Core.ScenariosCore
         Add,
         AddList,
         DeleteList,
-
+        DeleteTask,
     }
     public enum ScenarioResult
     {

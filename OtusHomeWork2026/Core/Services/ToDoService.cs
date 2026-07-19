@@ -70,9 +70,9 @@ namespace OtusHomeWork2026.Core.Services
                 return tempToDoItemList;
         }
 
-        public Task<ToDoItem?> Get(Guid toDoItemId, CancellationToken ct)
+        public async Task<ToDoItem?> Get(Guid toDoItemId, CancellationToken ct)
         {
-            throw new NotImplementedException();
+            return await toDoRepository.GetAsync(toDoItemId, ct);
         }
     }
 }

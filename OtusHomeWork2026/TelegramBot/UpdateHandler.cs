@@ -5,11 +5,13 @@ using OtusHomeWork2026.Core.Entities;
 using OtusHomeWork2026.Core.Exceptions;
 using OtusHomeWork2026.Core.ScenariosCore;
 using OtusHomeWork2026.Core.Services;
+using OtusHomeWork2026.Helpers;
 using OtusHomeWork2026.Infrastructure.DataAccess;
 using OtusHomeWork2026.Infrastructure.DataAccessFiles;
 using OtusHomeWork2026.TelegramBot.ScenariosTasks;
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Threading;
 using Telegram.Bot;
 using Telegram.Bot.Polling;
@@ -21,6 +23,8 @@ namespace OtusHomeWork2026.TelegramBot
 {
     internal class UpdateHandler : IUpdateHandler
     {
+        int _pageSize = 5;
+        int _currentPage = 0;
         private static int maxLengthList = 255;
         private static int taskLengthLimittaskLength = 40;
         private static string _command = string.Empty;
@@ -79,10 +83,9 @@ namespace OtusHomeWork2026.TelegramBot
         {
             userData = await _userService.GetUserAsync(GetUserIdFromUpdate(update), cancellationToken);
 
-            var text = GetMessageFromUpdate(update);
             var chat = GetChatFromUpdate(update);
-
-
+            var text = GetMessageFromUpdate(update);
+            
             if (null == userData)
                 _checkName = false;
             else
@@ -179,88 +182,89 @@ namespace OtusHomeWork2026.TelegramBot
                                 InlineKeyboardButton.WithCallbackData(text: "❌ Удалить", callbackData: "deletelist"),
                             });
 
-                        await _telegramBotClient.SendMessage(
+                        var sendMessage = await _telegramBotClient.SendMessage(
                             chat,
                             text: "Выберите список",
                             replyMarkup: inlineKeyboard,
                             cancellationToken: cancellationToken
                         );
+                        lastSentMessageId = sendMessage.Id;
                         break;
 
-                    case Const.CmRemoveTask:
-                        if (!await CheckAnonimusAsync(userData, _telegramBotClient, update, cancellationToken))
-                            break;
-                        var stringDeleteTaks = string.Empty;
-                        if ((await _toDoService.GetAllByUserIdAsync(userData.UserId, cancellationToken)).Count != 0)
-                        {
-                            if (string.IsNullOrWhiteSpace(_arguments))
-                            {
-                                await _telegramBotClient.SendMessage(chat,
-                                                    "Введите Guid задачи",
-                                                    replyMarkup: _replyKeyboardMarkup,
-                                                    cancellationToken: cancellationToken);
-                                break;
-                            }
-                            else
-                            {
-                                if (Guid.TryParse(_arguments, out Guid id))
-                                {
-                                    var tempTaskDelete = (await _toDoService.GetAllByUserIdAsync(userData.UserId, cancellationToken)).Where(x => x.GuidId == id).ToList().FirstOrDefault();
-                                    if (
-                                        tempTaskDelete != null
-                                    )
-                                    {
-                                        await _toDoService.DeleteAsync(id, cancellationToken);
-                                        stringDeleteTaks = $"Задача \"{tempTaskDelete.TaskName}\" удалена";
-                                    }
-                                    else
-                                        stringDeleteTaks = $"Задача с Guid \"{id}\" не найдена";
-                                }
-                                else
-                                    stringDeleteTaks = "Введен не Guid";
-                            }
-                        }
-                        else
-                            stringDeleteTaks = "Список задач пуст";
-                        await _telegramBotClient.SendMessage(chat,
-                                                    Const.ReplaceText(stringDeleteTaks, userData),
-                                                    replyMarkup: _replyKeyboardMarkup,
-                                                    cancellationToken: cancellationToken);
-                        break;
+                    //case Const.CmRemoveTask:
+                    //    if (!await CheckAnonimusAsync(userData, _telegramBotClient, update, cancellationToken))
+                    //        break;
+                    //    var stringDeleteTaks = string.Empty;
+                    //    if ((await _toDoService.GetAllByUserIdAsync(userData.UserId, cancellationToken)).Count != 0)
+                    //    {
+                    //        if (string.IsNullOrWhiteSpace(_arguments))
+                    //        {
+                    //            await _telegramBotClient.SendMessage(chat,
+                    //                                "Введите Guid задачи",
+                    //                                replyMarkup: _replyKeyboardMarkup,
+                    //                                cancellationToken: cancellationToken);
+                    //            break;
+                    //        }
+                    //        else
+                    //        {
+                    //            if (Guid.TryParse(_arguments, out Guid id))
+                    //            {
+                    //                var tempTaskDelete = (await _toDoService.GetAllByUserIdAsync(userData.UserId, cancellationToken)).Where(x => x.GuidId == id).ToList().FirstOrDefault();
+                    //                if (
+                    //                    tempTaskDelete != null
+                    //                )
+                    //                {
+                    //                    await _toDoService.DeleteAsync(id, cancellationToken);
+                    //                    stringDeleteTaks = $"Задача \"{tempTaskDelete.TaskName}\" удалена";
+                    //                }
+                    //                else
+                    //                    stringDeleteTaks = $"Задача с Guid \"{id}\" не найдена";
+                    //            }
+                    //            else
+                    //                stringDeleteTaks = "Введен не Guid";
+                    //        }
+                    //    }
+                    //    else
+                    //        stringDeleteTaks = "Список задач пуст";
+                    //    await _telegramBotClient.SendMessage(chat,
+                    //                                Const.ReplaceText(stringDeleteTaks, userData),
+                    //                                replyMarkup: _replyKeyboardMarkup,
+                    //                                cancellationToken: cancellationToken);
+                    //    break;
 
-                    case Const.CmCompleteTask:
-                        if (!await CheckAnonimusAsync(userData, _telegramBotClient, update, cancellationToken))
-                            break;
-                        if (string.IsNullOrWhiteSpace(_arguments))
-                        {
-                            await _telegramBotClient.SendMessage(chat,
-                                                    "Введите Guid задачи",
-                                                    replyMarkup: _replyKeyboardMarkup,
-                                                    cancellationToken: cancellationToken);
-                            break;
-                        }
-                        else
-                        {
-                            var retItemsCT = await _toDoService.GetAllByUserIdAsync(userData.UserId, cancellationToken);
-                            var retStringCT = "";
-                            if (Guid.TryParse(_arguments, out Guid result))
-                            {
-                                if (retItemsCT.Count == 0)
-                                    retStringCT = "Список пуст";
-                                else
-                                {
-                                    await _toDoService.MarkCompletedAsync(result, cancellationToken);
-                                    retStringCT = "Задача помечена как выполненая";
-                                }
-                            }
-                            else
-                                retStringCT = "Введен не GUID задачи";
-                            await _telegramBotClient.SendMessage(chat,
-                                                        Const.ReplaceText($"{retStringCT}", userData),
-                                                        replyMarkup: _replyKeyboardMarkup,
-                                                        cancellationToken: cancellationToken);
-                            break;
-                        }
+                    //case Const.CmCompleteTask:
+                    //    if (!await CheckAnonimusAsync(userData, _telegramBotClient, update, cancellationToken))
+                    //        break;
+                    //    if (string.IsNullOrWhiteSpace(_arguments))
+                    //    {
+                    //        await _telegramBotClient.SendMessage(chat,
+                    //                                "Введите Guid задачи",
+                    //                                replyMarkup: _replyKeyboardMarkup,
+                    //                                cancellationToken: cancellationToken);
+                    //        break;
+                    //    }
+                    //    else
+                    //    {
+                    //        var retItemsCT = await _toDoService.GetAllByUserIdAsync(userData.UserId, cancellationToken);
+                    //        var retStringCT = "";
+                    //        if (Guid.TryParse(_arguments, out Guid result))
+                    //        {
+                    //            if (retItemsCT.Count == 0)
+                    //                retStringCT = "Список пуст";
+                    //            else
+                    //            {
+                    //                await _toDoService.MarkCompletedAsync(result, cancellationToken);
+                    //                retStringCT = "Задача помечена как выполненая";
+                    //            }
+                    //        }
+                    //        else
+                    //            retStringCT = "Введен не GUID задачи";
+                    //        await _telegramBotClient.SendMessage(chat,
+                    //                                    Const.ReplaceText($"{retStringCT}", userData),
+                    //                                    replyMarkup: _replyKeyboardMarkup,
+                    //                                    cancellationToken: cancellationToken);
+                    //        break;
+                    //    }
 
                     case Const.CmReport:
                         if (!await CheckAnonimusAsync(userData, _telegramBotClient, update, cancellationToken))
@@ -322,27 +326,79 @@ namespace OtusHomeWork2026.TelegramBot
             if (callbackQuery.Data == null)
                 return;
 
-            var toDoListCallbackDto = ToDoListCallbackDto.FromString(callbackQuery.Data);
+            var callbackDto = CallbackDto.FromString(callbackQuery.Data);
             var tasks = await _toDoService.GetByUserIdAndList(toDoUser.UserId, null, ct);
-            switch (toDoListCallbackDto.Action)
+            switch (callbackDto.Action)
             {
                 case "show":
-                    var retItems = await _toDoService.GetByUserIdAndList(toDoUser.UserId, toDoListCallbackDto.ToDoListId, ct);
+                    var toDoListCallbackDto = ToDoListCallbackDto.FromString(callbackQuery.Data);
+                    var retAllItems = await _toDoService.GetByUserIdAndList(toDoUser.UserId, toDoListCallbackDto.ToDoListId, ct);
+                    var retItems = retAllItems.Where(x => x.State == ToDoItemState.Active).ToList();
                     var retString = "";
+                    InlineKeyboardMarkup inlineKeyboard = new InlineKeyboardMarkup();
                     if (retItems == null || retItems.Count == 0)
                         retString = "Список задач пуст";
                     else
-                        foreach (var item in retItems)
-                            retString += $"{item.CreateAT} {item.State} {item.TaskName} `{item.GuidId}` \r\n";
+                    {
+                        
+                        foreach (var item in retItems.Where(x=> x.State == ToDoItemState.Active))
+                        {
+                            //retString += $"{item.CreateAT} {item.State} {item.TaskName} `{item.GuidId}` \r\n";
+                            var toDoItemCallbackDtoK = ToDoItemCallbackDto.FromString($"showtask|{item.GuidId}");
+                            inlineKeyboard.AddNewRow(InlineKeyboardButton.WithCallbackData(text: item.TaskName, callbackData: toDoItemCallbackDtoK.ToString()));
+                        }
+                    }
                     if (lastSentMessageId != 0)
                         await _telegramBotClient.EditMessageText(GetChatFromUpdate(update),
                                                         lastSentMessageId,
                                                         Const.ReplaceText($"{retString}", userData),
+                                                        replyMarkup: inlineKeyboard,
                                                         cancellationToken: ct);
                     else
                         await _telegramBotClient.SendMessage(GetChatFromUpdate(update),
                                                         Const.ReplaceText($"{retString}", userData),
+                                                        replyMarkup: inlineKeyboard,
                                                         cancellationToken: ct);
+                    break;
+                case "showtask":
+                    var toDoItemCallbackDto = ToDoItemCallbackDto.FromString(callbackQuery.Data);
+                    var task = await _toDoService.Get((Guid)toDoItemCallbackDto.ToDoItemId,ct);
+                    var retString2 = $"Задача: {task.TaskName}\n Создана: {task.CreateAT} \n Срок выолнения до: {task.DeadLine}";
+                    InlineKeyboardMarkup inlineKeyboard2 = new InlineKeyboardMarkup();
+                    inlineKeyboard2.AddNewRow(
+                                InlineKeyboardButton.WithCallbackData(
+                                        text: "✅Выполнить", 
+                                        callbackData: ToDoItemCallbackDto.FromString($"completetask|{task.GuidId}").ToString()),
+                                InlineKeyboardButton.WithCallbackData(
+                                        text: "❌ Удалить", 
+                                        callbackData: ToDoItemCallbackDto.FromString($"deletetask|{task.GuidId}").ToString())
+                            );
+                    if (lastSentMessageId != 0)
+                        await _telegramBotClient.EditMessageText(GetChatFromUpdate(update),
+                                                        lastSentMessageId,
+                                                        Const.ReplaceText($"{retString2}", userData),
+                                                        replyMarkup: inlineKeyboard2,
+                                                        cancellationToken: ct);
+                    else
+                        await _telegramBotClient.SendMessage(GetChatFromUpdate(update),
+                                                        Const.ReplaceText($"{retString2}", userData),
+                                                        replyMarkup: inlineKeyboard2,
+                                                        cancellationToken: ct);
+                    break;
+                case "completetask":
+                    var toDoItemCallbackDto3 = ToDoItemCallbackDto.FromString(callbackQuery.Data);
+                    var taskForComplete = await _toDoRepository.GetAsync((Guid)toDoItemCallbackDto3.ToDoItemId, ct);
+                    await _toDoRepository.UpdateAsync(taskForComplete, ct);
+                    await _telegramBotClient.SendMessage(
+                        GetChatFromUpdate(update),
+                        $"Задача {taskForComplete?.TaskName}\nЗадача выполнена.",
+                        cancellationToken: ct);
+                    break;
+                case "deletetask":
+                    var deleteTaskScenarioContext = new ScenarioContext(ScenarioType.DeleteTask);
+                    var deleteTaskScenario = new DeleteTaskScenario(_userService, _toDoService);
+                    _scenarios = _scenarios.Append(deleteTaskScenario).ToList();
+                    await ProcessScenario(deleteTaskScenarioContext, update, ct);
                     break;
                 case "addlist":
                     var newScenarioContext = new ScenarioContext(ScenarioType.AddList);
@@ -454,6 +510,82 @@ namespace OtusHomeWork2026.TelegramBot
                 return update.EditedMessage.From.Id;
 
             throw new InvalidOperationException("Не удалось получить Id пользователя из update");
+        }
+        private async Task<InlineKeyboardMarkup> BuildPagedButtons(
+            IReadOnlyList<KeyValuePair<string, string>> callbackData,
+            PagedListCallbackDto pageListDto
+        ){
+            //Расчитать общее количество страниц.
+            var totalPages = (callbackData.Count + _pageSize - 1) / _pageSize; // Деление целых чисел с округлением вверх.
+            //Создать InlineKeyboardMarkup и добавить кнопки относящие только к конкретной странице с помощью 
+            var inlineKeyboardMarkup = new InlineKeyboardMarkup();
+
+            // Получить задачи из callbackData.
+            var tasks = new List<ToDoItem>();
+            for (var i = 0; i < callbackData.Count; ++i)
+            {
+                var toDoListId = ToDoListCallbackDto.FromString(callbackData[i].Value).ToDoListId;
+                var toDoItem = await _toDoRepository.GetAsync((Guid)toDoListId, CancellationToken.None);
+                tasks.Add(toDoItem);
+            }
+
+            var tempCurrentPage = _currentPage;
+            var tasksInPage = tasks.GetBatchByNumber(_pageSize, pageListDto.Page)?.Cast<ToDoItem>();
+            // Добавить задачи.
+            foreach (var task in tasksInPage)
+            {
+                //var activeTasksCallbackDto = ToDoListCallbackDto.FromString($"showtask|{task.Id}");
+                var activeTasksCallbackDto = pageListDto.Action == "show"
+                    ? ToDoListCallbackDto.FromString($"showtask|{task.GuidId}")
+                    : ToDoListCallbackDto.FromString($"showcompletedtaskinfo|{task.GuidId}");
+
+                inlineKeyboardMarkup.AddNewRow(
+                new[]
+                {
+                    InlineKeyboardButton.WithCallbackData(text: $"{task.TaskName}", callbackData: activeTasksCallbackDto.ToString()),
+                });
+            }
+
+            //bool toLeftAdded = false;
+            if (pageListDto.Page > 0)
+            {
+                //toLeftAdded = true;
+                var pagedListCallbackDto = PagedListCallbackDto.FromString($"{pageListDto.Action}|{pageListDto.ToDoListId}|{_currentPage - 1}");
+                inlineKeyboardMarkup.AddNewRow(
+                    new[]
+                    {
+                        InlineKeyboardButton.WithCallbackData(text: "⬅️", callbackData: pagedListCallbackDto.ToString()),
+                    });
+            }
+            if (pageListDto.Page < totalPages - 1)
+            {
+                var pagedListCallbackDtoNext = PagedListCallbackDto.FromString($"{pageListDto.Action}|{pageListDto.ToDoListId}|{_currentPage + 1}");
+                //if (toLeftAdded)
+                //{
+                inlineKeyboardMarkup.AddButton(InlineKeyboardButton.WithCallbackData(text: "➡️", callbackData: pagedListCallbackDtoNext.ToString()));
+                //}
+                //else
+                //{
+                //    inlineKeyboardMarkup.AddNewRow(
+                //        new[]
+                //        {
+                //            InlineKeyboardButton.WithCallbackData(text: "➡️", callbackData: pagedListCallbackDtoNext.ToString()),
+                //        });
+                //}
+            }
+
+            if (pageListDto.Action == "show")
+            {
+                // Добавить кнопку Посмотреть выполненные.
+                var pagedListActiveCallbackDtoNext = PagedListCallbackDto.FromString($"show_completed|{pageListDto.ToDoListId}|0");
+                inlineKeyboardMarkup.AddNewRow(
+                    new[]
+                    {
+                    InlineKeyboardButton.WithCallbackData(text: "☑️Посмотреть выполненные", callbackData: pagedListActiveCallbackDtoNext.ToString()),
+                    });
+            }
+
+            return inlineKeyboardMarkup;
         }
     }
 }
