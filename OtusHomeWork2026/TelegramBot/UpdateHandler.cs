@@ -312,6 +312,67 @@ namespace OtusHomeWork2026.TelegramBot
                                             cancellationToken: cancellationToken);
             }
         }
+        private async Task ShowTasks(Update update,CallbackQuery callbackQuery, bool needActiveTasks, CancellationToken ct)
+        {
+            var user = callbackQuery.From;
+            var chat = callbackQuery.Message?.Chat;
+            var toDoUser = await _userService.GetUserAsync(user.Id, ct);
+            if (toDoUser == null || chat == null || callbackQuery == null)
+                return;
+
+            var toDoListCallbackDto = ToDoListCallbackDto.FromString(callbackQuery.Data);
+            // Получить задачи без списка (категории) для задач.
+            var tasks = await _toDoService.GetByUserIdAndList(toDoUser.UserId, toDoListCallbackDto.ToDoListId, ct);
+            var activeTasks = needActiveTasks
+                ? tasks.Where(x => x.State == ToDoItemState.Active)
+                : tasks.Where(x => x.State == ToDoItemState.Completed);
+
+            if (!activeTasks.Any() && !needActiveTasks)
+            {
+                await _telegramBotClient.SendMessage(chat, "Список задач пуст.", replyMarkup: _replyKeyboardMarkup, cancellationToken: ct);
+                return;
+            }
+
+            var allTasksKeyValuePair = new List<KeyValuePair<string, string>>();
+            foreach (var task in activeTasks)
+            {
+                var activeTasksCallbackDto = needActiveTasks
+                    ? ToDoListCallbackDto.FromString($"showtask|{task.GuidId}")
+                    : ToDoListCallbackDto.FromString($"show_completed|{task.GuidId}");
+                allTasksKeyValuePair.Add(new KeyValuePair<string, string>(task.TaskName, activeTasksCallbackDto.ToString()));
+            }
+            try
+            {
+                string[] data = callbackQuery.Data.Split("|");
+                if (data.Length > 2)
+                    _currentPage = int.Parse(data[2]);
+            }
+            catch (Exception ex) { }
+
+            PagedListCallbackDto pagedListCallbackDto = new PagedListCallbackDto
+            {
+                Page = _currentPage,
+                Action = toDoListCallbackDto.Action,
+                ToDoListId = toDoListCallbackDto.ToDoListId
+            };
+
+            var inlineKeyboardActiveTasks = await BuildPagedButtons(allTasksKeyValuePair, pagedListCallbackDto);
+            var title = allTasksKeyValuePair.Capacity > 0 
+                ? needActiveTasks ? "Задачи в работе" : "Выполненные задачи"
+                : "Список пуст";
+            if (lastSentMessageId != 0)
+                await _telegramBotClient.EditMessageText(GetChatFromUpdate(update),
+                                                lastSentMessageId,
+                                                Const.ReplaceText($"{title}", userData),
+                                                replyMarkup: inlineKeyboardActiveTasks,
+                                                cancellationToken: ct);
+            else
+                await _telegramBotClient.SendMessage(GetChatFromUpdate(update),
+                                                Const.ReplaceText($"{title}", userData),
+                                                replyMarkup: inlineKeyboardActiveTasks,
+                                                cancellationToken: ct);
+        }
+
         public async Task OnCallbackQuery(Update update,CallbackQuery callbackQuery, CancellationToken ct)
         {
             var toDoUser = await _userService.GetUserAsync(GetUserIdFromUpdate(update), ct);
@@ -325,65 +386,46 @@ namespace OtusHomeWork2026.TelegramBot
             }
             if (callbackQuery.Data == null)
                 return;
-
-            var callbackDto = CallbackDto.FromString(callbackQuery.Data);
+            var toDoListCallbackDto = ToDoListCallbackDto.FromString(callbackQuery.Data);
             var tasks = await _toDoService.GetByUserIdAndList(toDoUser.UserId, null, ct);
-            switch (callbackDto.Action)
+            switch (toDoListCallbackDto.Action)
             {
                 case "show":
-                    var toDoListCallbackDto = ToDoListCallbackDto.FromString(callbackQuery.Data);
-                    var retAllItems = await _toDoService.GetByUserIdAndList(toDoUser.UserId, toDoListCallbackDto.ToDoListId, ct);
-                    var retItems = retAllItems.Where(x => x.State == ToDoItemState.Active).ToList();
-                    var retString = "";
-                    InlineKeyboardMarkup inlineKeyboard = new InlineKeyboardMarkup();
-                    if (retItems == null || retItems.Count == 0)
-                        retString = "Список задач пуст";
-                    else
-                    {
-                        
-                        foreach (var item in retItems.Where(x=> x.State == ToDoItemState.Active))
-                        {
-                            //retString += $"{item.CreateAT} {item.State} {item.TaskName} `{item.GuidId}` \r\n";
-                            var toDoItemCallbackDtoK = ToDoItemCallbackDto.FromString($"showtask|{item.GuidId}");
-                            inlineKeyboard.AddNewRow(InlineKeyboardButton.WithCallbackData(text: item.TaskName, callbackData: toDoItemCallbackDtoK.ToString()));
-                        }
-                    }
-                    if (lastSentMessageId != 0)
-                        await _telegramBotClient.EditMessageText(GetChatFromUpdate(update),
-                                                        lastSentMessageId,
-                                                        Const.ReplaceText($"{retString}", userData),
-                                                        replyMarkup: inlineKeyboard,
-                                                        cancellationToken: ct);
-                    else
-                        await _telegramBotClient.SendMessage(GetChatFromUpdate(update),
-                                                        Const.ReplaceText($"{retString}", userData),
-                                                        replyMarkup: inlineKeyboard,
-                                                        cancellationToken: ct);
+                    await ShowTasks(update, callbackQuery, true, ct);
+                    break;
+                case "show_completed":
+                    await ShowTasks(update, callbackQuery, false, ct);
                     break;
                 case "showtask":
-                    var toDoItemCallbackDto = ToDoItemCallbackDto.FromString(callbackQuery.Data);
-                    var task = await _toDoService.Get((Guid)toDoItemCallbackDto.ToDoItemId,ct);
-                    var retString2 = $"Задача: {task.TaskName}\n Создана: {task.CreateAT} \n Срок выолнения до: {task.DeadLine}";
-                    InlineKeyboardMarkup inlineKeyboard2 = new InlineKeyboardMarkup();
-                    inlineKeyboard2.AddNewRow(
-                                InlineKeyboardButton.WithCallbackData(
-                                        text: "✅Выполнить", 
-                                        callbackData: ToDoItemCallbackDto.FromString($"completetask|{task.GuidId}").ToString()),
-                                InlineKeyboardButton.WithCallbackData(
-                                        text: "❌ Удалить", 
-                                        callbackData: ToDoItemCallbackDto.FromString($"deletetask|{task.GuidId}").ToString())
-                            );
+                    InlineKeyboardMarkup inlineKeyboardCompliteDeleteTasks = new InlineKeyboardMarkup();
+                    var completeCallbackDto = ToDoListCallbackDto.FromString($"completetask|{toDoListCallbackDto.ToDoListId}");
+                    var deleteCallbackDto = ToDoListCallbackDto.FromString($"deletetask|{toDoListCallbackDto.ToDoListId}");
+                    inlineKeyboardCompliteDeleteTasks.AddNewRow(
+                            new[]
+                            {
+                                    InlineKeyboardButton.WithCallbackData(text: "✅Выполнить", callbackData: completeCallbackDto.ToString()),
+                                    InlineKeyboardButton.WithCallbackData(text: "❌Удалить", callbackData: deleteCallbackDto.ToString()),
+                            });
+
+                    var taskSelected = await _toDoRepository.GetAsync((Guid)toDoListCallbackDto.ToDoListId, ct);
                     if (lastSentMessageId != 0)
                         await _telegramBotClient.EditMessageText(GetChatFromUpdate(update),
                                                         lastSentMessageId,
-                                                        Const.ReplaceText($"{retString2}", userData),
-                                                        replyMarkup: inlineKeyboard2,
+                                                        Const.ReplaceText($"Задача {taskSelected?.TaskName}\r\n Срок выполнения {taskSelected?.DeadLine}:", userData),
+                                                        replyMarkup: inlineKeyboardCompliteDeleteTasks,
                                                         cancellationToken: ct);
                     else
                         await _telegramBotClient.SendMessage(GetChatFromUpdate(update),
-                                                        Const.ReplaceText($"{retString2}", userData),
-                                                        replyMarkup: inlineKeyboard2,
+                                                        Const.ReplaceText($"Задача {taskSelected?.TaskName}:", userData),
+                                                        replyMarkup: inlineKeyboardCompliteDeleteTasks,
                                                         cancellationToken: ct);
+                    break;
+                case "showcompletedtaskinfo":
+                    var completedTaskSelected = await _toDoRepository.GetAsync((Guid)toDoListCallbackDto.ToDoListId, ct);
+                    await _telegramBotClient.SendMessage(GetChatFromUpdate(update),
+                        $"Задача {completedTaskSelected?.TaskName}:\nСрок выполнения: {completedTaskSelected?.DeadLine}\nВремя создания: {completedTaskSelected?.CreateAT}\nВремя выполнения: {completedTaskSelected?.ChangedAt}",
+                        replyMarkup: _replyKeyboardMarkup,
+                        cancellationToken: ct);
                     break;
                 case "completetask":
                     var toDoItemCallbackDto3 = ToDoItemCallbackDto.FromString(callbackQuery.Data);
@@ -515,12 +557,9 @@ namespace OtusHomeWork2026.TelegramBot
             IReadOnlyList<KeyValuePair<string, string>> callbackData,
             PagedListCallbackDto pageListDto
         ){
-            //Расчитать общее количество страниц.
-            var totalPages = (callbackData.Count + _pageSize - 1) / _pageSize; // Деление целых чисел с округлением вверх.
-            //Создать InlineKeyboardMarkup и добавить кнопки относящие только к конкретной странице с помощью 
+            var totalPages = (callbackData.Count + _pageSize - 1) / _pageSize;
             var inlineKeyboardMarkup = new InlineKeyboardMarkup();
 
-            // Получить задачи из callbackData.
             var tasks = new List<ToDoItem>();
             for (var i = 0; i < callbackData.Count; ++i)
             {
@@ -531,10 +570,8 @@ namespace OtusHomeWork2026.TelegramBot
 
             var tempCurrentPage = _currentPage;
             var tasksInPage = tasks.GetBatchByNumber(_pageSize, pageListDto.Page)?.Cast<ToDoItem>();
-            // Добавить задачи.
             foreach (var task in tasksInPage)
             {
-                //var activeTasksCallbackDto = ToDoListCallbackDto.FromString($"showtask|{task.Id}");
                 var activeTasksCallbackDto = pageListDto.Action == "show"
                     ? ToDoListCallbackDto.FromString($"showtask|{task.GuidId}")
                     : ToDoListCallbackDto.FromString($"showcompletedtaskinfo|{task.GuidId}");
@@ -545,38 +582,23 @@ namespace OtusHomeWork2026.TelegramBot
                     InlineKeyboardButton.WithCallbackData(text: $"{task.TaskName}", callbackData: activeTasksCallbackDto.ToString()),
                 });
             }
-
-            //bool toLeftAdded = false;
+            InlineKeyboardButton buttonBack;
+            InlineKeyboardButton buttonNext;
             if (pageListDto.Page > 0)
             {
-                //toLeftAdded = true;
                 var pagedListCallbackDto = PagedListCallbackDto.FromString($"{pageListDto.Action}|{pageListDto.ToDoListId}|{_currentPage - 1}");
-                inlineKeyboardMarkup.AddNewRow(
-                    new[]
-                    {
-                        InlineKeyboardButton.WithCallbackData(text: "⬅️", callbackData: pagedListCallbackDto.ToString()),
-                    });
+                buttonBack = InlineKeyboardButton.WithCallbackData(text: "⬅️", callbackData: pagedListCallbackDto.ToString());
+                inlineKeyboardMarkup.AddNewRow(buttonBack);
             }
             if (pageListDto.Page < totalPages - 1)
             {
                 var pagedListCallbackDtoNext = PagedListCallbackDto.FromString($"{pageListDto.Action}|{pageListDto.ToDoListId}|{_currentPage + 1}");
-                //if (toLeftAdded)
-                //{
-                inlineKeyboardMarkup.AddButton(InlineKeyboardButton.WithCallbackData(text: "➡️", callbackData: pagedListCallbackDtoNext.ToString()));
-                //}
-                //else
-                //{
-                //    inlineKeyboardMarkup.AddNewRow(
-                //        new[]
-                //        {
-                //            InlineKeyboardButton.WithCallbackData(text: "➡️", callbackData: pagedListCallbackDtoNext.ToString()),
-                //        });
-                //}
+                buttonNext = InlineKeyboardButton.WithCallbackData(text: "➡️", callbackData: pagedListCallbackDtoNext.ToString());
+                inlineKeyboardMarkup.AddNewRow(buttonNext);
             }
 
             if (pageListDto.Action == "show")
             {
-                // Добавить кнопку Посмотреть выполненные.
                 var pagedListActiveCallbackDtoNext = PagedListCallbackDto.FromString($"show_completed|{pageListDto.ToDoListId}|0");
                 inlineKeyboardMarkup.AddNewRow(
                     new[]
