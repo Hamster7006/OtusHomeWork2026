@@ -17,7 +17,7 @@ namespace OtusHomeWork2026.Core.ScenariosCore
 
         public async Task<ScenarioContext?> GetContext(long userId, CancellationToken ct)
         {
-            if(_scenarioContextRepository.ContainsKey(userId))
+            if (_scenarioContextRepository.ContainsKey(userId))
                 return _scenarioContextRepository[userId];
             else
                 return null;
@@ -30,7 +30,7 @@ namespace OtusHomeWork2026.Core.ScenariosCore
 
         public async Task SetContext(long userId, ScenarioContext context, CancellationToken ct)
         {
-            _scenarioContextRepository[userId]=context;
+            _scenarioContextRepository[userId] = context;
         }
     }
 }

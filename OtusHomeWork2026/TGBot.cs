@@ -114,11 +114,11 @@ namespace OtusHomeWork2026
                     new BotCommand { Command = $"{Const.CmHelp.Replace("/","")}", Description = $"{Const.CmHelpDescription}" },
                     new BotCommand { Command = $"{Const.CmInfo.Replace("/","")}", Description = $"{Const.CmInfoDescription}" },
                     new BotCommand { Command = $"{Const.CmAddTask.Replace("/","")}", Description = $"{Const.CmAddTaskDescription}" },
-                    new BotCommand { Command = $"{Const.CmRemoveTask.Replace("/", "")}", Description = $"{Const.CmRemoveTaskDescription}" },
+                    //new BotCommand { Command = $"{Const.CmRemoveTask.Replace("/", "")}", Description = $"{Const.CmRemoveTaskDescription}" },
                     new BotCommand { Command = $"{Const.CmShowTasks.Replace("/", "")}", Description = $"{Const.CmShowTasksDescription}" },
                     new BotCommand { Command = $"{Const.CmReport.Replace("/", "")}", Description = $"{Const.CmReportDescription}" },
                     new BotCommand { Command = $"{Const.CmFind.Replace("/", "")}", Description = $"{Const.CmFindDescription}" },
-                    new BotCommand { Command = $"{Const.CmCompleteTask.Replace("/", "")}", Description = $"{Const.CmCompleteTaskDescription}" },
+                    //new BotCommand { Command = $"{Const.CmCompleteTask.Replace("/", "")}", Description = $"{Const.CmCompleteTaskDescription}" },
                     new BotCommand { Command = $"{Const.CmExit.Replace("/", "")}", Description = Const.CmExitDescription },
                 };
 

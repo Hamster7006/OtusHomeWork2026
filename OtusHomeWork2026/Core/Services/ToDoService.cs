@@ -69,5 +69,10 @@ namespace OtusHomeWork2026.Core.Services
             else
                 return tempToDoItemList;
         }
+
+        public async Task<ToDoItem?> Get(Guid toDoItemId, CancellationToken ct)
+        {
+            return await toDoRepository.GetAsync(toDoItemId, ct);
+        }
     }
 }
